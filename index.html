@@ -423,8 +423,8 @@
   <div class="login-wrap"><div class="login-card">
     <div class="logo" style="margin-bottom:22px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" class="pin"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8z" fill="currentColor"/><circle cx="12" cy="10" r="3.2" fill="white"/></svg>Roadimap</div>
     <h2 style="font-size:18px; margin:0 0 4px;">Log in</h2><p style="color:var(--ink-faint); font-size:13px; margin-bottom:20px;">Internal team access only.</p>
-    <div class="field"><label>Email</label><input type="email" id="login-email" value="dami@wragby.com"></div>
-    <div class="field"><label>Password</label><input type="password" id="login-password" value="????????"></div>
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@wragby.com" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="Password" autocomplete="current-password"></div>
     <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="doLogin()">Log in</button>
     <div style="display:flex; align-items:center; gap:10px; margin:18px 0;"><div style="flex:1; height:1px; background:var(--border);"></div><span style="font-size:11.5px; color:var(--ink-faint);">OR</span><div style="flex:1; height:1px; background:var(--border);"></div></div>
     <button class="btn btn-ghost" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="doLogin()">
@@ -626,7 +626,7 @@
     <div class="main"><div class="topbar" id="topbar-users"></div>
       <div class="content">
         <div class="page-head"><div><h1>User</h1></div><button class="btn btn-primary" onclick="openUserModal()">+ Invite User</button></div>
-        <div class="ftable-wrap"><table class="ftable user-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="users-table-body"></tbody></table></div>
+        <div class="ftable-wrap"><table class="ftable user-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th><th></th></tr></thead><tbody id="users-table-body"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -843,9 +843,12 @@ function renderInternalProducts(){
     return `<div class="product-card" onclick="openPublicRoadmapForInternal('${p.id}')">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div class="p-icon" style="background:${p.color}18;"><i data-lucide="${p.icon}" style="width:20px;height:20px;color:${p.color};"></i></div>
-        <label class="toggle ${isPublic?'on':''}" style="gap:6px;" onclick="event.stopPropagation(); toggleProductVisibility('${p.id}')" title="${isPublic?'Click to make internal-only':'Click to make public'}">
-          <div class="toggle-track"></div><span style="font-size:11px; color:${isPublic?'var(--st-released)':'var(--ink-faint)'};">${isPublic?'Public':'Internal'}</span>
-        </label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="icon-btn" title="Edit product" onclick="event.stopPropagation(); openProductModal('${p.id}')"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
+          <label class="toggle ${isPublic?'on':''}" style="gap:6px;" onclick="event.stopPropagation(); toggleProductVisibility('${p.id}')" title="${isPublic?'Click to make internal-only':'Click to make public'}">
+            <div class="toggle-track"></div><span style="font-size:11px; color:${isPublic?'var(--st-released)':'var(--ink-faint)'};">${isPublic?'Public':'Internal'}</span>
+          </label>
+        </div>
       </div>
       <h3>${p.name}</h3><p>${p.description}</p>
       <div class="p-meta"><span class="p-count">${feats.length} features</span><span style="color:var(--ink-faint)">${avg}% complete</span></div>
@@ -1395,17 +1398,20 @@ function submitModule(){
   closeModal(); showToast('Module created'); renderBoard('int');
 }
 
-function openProductModal(){
+function openProductModal(id){
+  const editing = !!id && !!productById(id);
+  const p = editing ? productById(id) : { name:'', description:'', color:'#2E63F6', visibility:'PRIVATE' };
   openModal(`
     <button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    <h2>Create product</h2><div class="sub">Appears immediately in Products, the roadmap dropdown and ? if public ? the landing page.</div>
-    <div class="field"><label>Name</label><input id="np-name" placeholder="e.g. Wragby CRM"></div>
-    <div class="field"><label>Description</label><textarea id="np-desc" rows="2"></textarea></div>
+    <h2>${editing?'Edit product':'Create product'}</h2><div class="sub">Appears immediately in Products, the roadmap dropdown and, if public, the landing page.</div>
+    <input type="hidden" id="np-edit-id" value="${editing?p.id:''}">
+    <div class="field"><label>Name</label><input id="np-name" placeholder="e.g. Wragby CRM" value="${(p.name||'').replace(/"/g,'&quot;')}"></div>
+    <div class="field"><label>Description</label><textarea id="np-desc" rows="2">${p.description||''}</textarea></div>
     <div class="field-row">
-      <div class="field"><label>Color</label><input id="np-color" type="color" value="#2E63F6" style="height:42px; padding:4px;"></div>
-      <div class="field"><label>Visibility</label><select id="np-visibility"><option value="PRIVATE">Internal</option><option value="PUBLIC">Public</option></select></div>
+      <div class="field"><label>Color</label><input id="np-color" type="color" value="${p.color||'#2E63F6'}" style="height:42px; padding:4px;"></div>
+      <div class="field"><label>Visibility</label><select id="np-visibility"><option value="PRIVATE" ${p.visibility!=='PUBLIC'?'selected':''}>Internal</option><option value="PUBLIC" ${p.visibility==='PUBLIC'?'selected':''}>Public</option></select></div>
     </div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitProduct()">Create product</button></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitProduct()">${editing?'Save changes':'Create product'}</button></div>
   `);
 }
 function submitProduct(){
@@ -1586,15 +1592,36 @@ function renderReports(){
    USER MANAGEMENT ? enable/disable
 ================================================================== */
 function renderUsersTable(){
-  document.getElementById('users-table-body').innerHTML = users.map((u,i)=>`
+  const isSuperAdmin = session.role==='SUPER_ADMIN';
+  document.getElementById('users-table-body').innerHTML = users.map((u)=>`
     <tr class="${u.active?'':'u-disabled'}">
       <td><span class="u-avatar">${u.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</span>${u.name}</td>
       <td>${u.email}</td><td><span class="role-badge">${u.role.replace(/_/g,' ')}</span></td>
       <td>${u.active?'Active':'Disabled'}</td>
-      <td><label class="toggle ${u.active?'on':''}" onclick="toggleUserActive(${i})"><div class="toggle-track"></div></label></td>
+      <td><label class="toggle ${u.active?'on':''}" onclick="toggleUserActive('${u.id}', ${u.active})"><div class="toggle-track"></div></label></td>
+      <td>${isSuperAdmin ? `<button class="icon-btn" title="Delete user" onclick="deleteUser('${u.id}','${(u.name||'').replace(/"/g,'&quot;')}')"><i data-lucide="trash-2" style="width:14px;height:14px;color:#EF4444;"></i></button>` : ''}</td>
     </tr>`).join('');
+  lucide.createIcons();
 }
-function toggleUserActive(i){ users[i].active = !users[i].active; renderUsersTable(); showToast(users[i].name + (users[i].active?' enabled':' disabled')); }
+toggleUserActive = async function(id, currentActive){
+  try {
+    const saved = await apiFetch('/users/'+id, { method:'PATCH', body: JSON.stringify({ active: !currentActive }) });
+    const idx = users.findIndex(u=>u.id===id);
+    if(idx>-1) users[idx] = Object.assign({}, users[idx], saved);
+    renderUsersTable();
+    showToast((saved.name||'User') + (saved.active?' enabled':' disabled'));
+  } catch(e){ showToast(e.message || 'Could not update the user'); }
+};
+deleteUser = async function(id, name){
+  if(session.role!=='SUPER_ADMIN'){ showToast('Only Super Admins can delete users'); return; }
+  if(!confirm(`Delete ${name}? This can't be undone.`)) return;
+  try {
+    await apiFetch('/users/'+id, { method:'DELETE' });
+    users = users.filter(u=>u.id!==id);
+    renderUsersTable();
+    showToast(name + ' deleted');
+  } catch(e){ showToast(e.message || 'Could not delete the user'); }
+};
 
 /* ==================================================================
    SETTINGS
@@ -2125,6 +2152,8 @@ async function loadWorkspaceData(){
 }
 
 /* ---- Auth ---- */
+const RM_TOKEN_KEY = 'roadimap_token';
+
 doLogin = async function(){
   const emailEl = document.getElementById('login-email');
   const passEl = document.getElementById('login-password');
@@ -2134,6 +2163,7 @@ doLogin = async function(){
   try {
     const data = await apiFetch('/auth/login', { method:'POST', body: JSON.stringify({ email, password }) });
     authToken = data.accessToken;
+    localStorage.setItem(RM_TOKEN_KEY, authToken);
     session.loggedIn = true;
     session.name = data.user.name;
     session.role = data.user.role;
@@ -2147,11 +2177,33 @@ doLogin = async function(){
 };
 doLogout = async function(){
   authToken = null;
+  localStorage.removeItem(RM_TOKEN_KEY);
   session.loggedIn = false;
   closeAllDD();
   await loadPublicData();
   go('landing');
 };
+
+// On page load, if a saved token exists, verify it and re-enter the workspace
+// automatically instead of asking for email/password again.
+async function tryResumeSession(){
+  const saved = localStorage.getItem(RM_TOKEN_KEY);
+  if(!saved) return false;
+  authToken = saved;
+  try {
+    const me = await apiFetch('/auth/me');
+    session.loggedIn = true;
+    session.name = me.name;
+    session.role = me.role;
+    session.initials = me.initials;
+    await loadWorkspaceData();
+    return true;
+  } catch(e){
+    authToken = null;
+    localStorage.removeItem(RM_TOKEN_KEY);
+    return false;
+  }
+}
 
 /* ---- Features ---- */
 submitFeature = async function(){
@@ -2257,9 +2309,10 @@ deleteModule = async function(id){
 
 /* ---- Products ---- */
 submitProduct = async function(){
-  if(!canEdit()){ showToast('Viewers cannot create products'); return; }
+  if(!canEdit()){ showToast('Viewers cannot edit products'); return; }
   const name = document.getElementById('np-name').value.trim();
   if(!name){ showToast('Give the product a name first'); return; }
+  const editId = document.getElementById('np-edit-id') ? document.getElementById('np-edit-id').value : '';
   const payload = {
     name,
     description: document.getElementById('np-desc').value || 'No description yet.',
@@ -2267,12 +2320,21 @@ submitProduct = async function(){
     visibility: document.getElementById('np-visibility').value,
   };
   try {
-    const saved = await apiFetch('/products', { method:'POST', body: JSON.stringify(payload) });
-    products.push(saved);
-    closeModal();
-    showToast('Product created');
-    go('products');
-  } catch(e){ showToast(e.message || 'Could not create the product'); }
+    if(editId){
+      const saved = await apiFetch('/products/'+editId, { method:'PATCH', body: JSON.stringify(payload) });
+      const idx = products.findIndex(p=>p.id===editId);
+      if(idx>-1) products[idx] = Object.assign({}, products[idx], saved);
+      closeModal();
+      showToast('Product updated');
+      go(document.querySelector('.view.active').id.replace('view-',''));
+    } else {
+      const saved = await apiFetch('/products', { method:'POST', body: JSON.stringify(payload) });
+      products.push(saved);
+      closeModal();
+      showToast('Product created');
+      go('products');
+    }
+  } catch(e){ showToast(e.message || 'Could not save the product'); }
 };
 toggleProductVisibility = async function(id){
   try {
@@ -2322,8 +2384,41 @@ function copyNewUserPassword(){
   }
 }
 
+/* ---- Activity feed ---- */
+function timeAgo(dateStr){
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs/24);
+  if(days < 30) return days + 'd ago';
+  return fmtDate(dateStr);
+}
+const originalRenderReportsForActivity = renderReports;
+renderReports = async function(){
+  originalRenderReportsForActivity();
+  const content = document.querySelector('#view-reports .content');
+  if(content && !document.getElementById('activity-feed-panel')){
+    content.insertAdjacentHTML('beforeend', `<div class="panel" id="activity-feed-panel" style="margin-top:22px;"><h3>Recent activity</h3><div id="activity-feed-list" style="font-size:13px;">Loading…</div></div>`);
+  }
+  const list = document.getElementById('activity-feed-list');
+  try {
+    const entries = await apiFetch('/activity?limit=30');
+    if(!list) return;
+    list.innerHTML = entries.length ? entries.map(a=>`<div class="activity-row"><span><b>${a.actorName}</b> ${a.action} ${a.entityType.toLowerCase()} <b>${a.entityName}</b>${a.detail?` — ${a.detail}`:''}</span><span style="margin-left:auto; color:var(--ink-faint); font-size:12px; white-space:nowrap;">${timeAgo(a.createdAt)}</span></div>`).join('') : `<div style="color:var(--ink-faint); padding:8px 0;">No activity yet.</div>`;
+  } catch(e){
+    if(list) list.innerHTML = `<div style="color:var(--ink-faint); padding:8px 0;">Could not load activity.</div>`;
+  }
+};
+
 /* ---- Bootstrap: load the public roadmap before showing the landing page ---- */
-loadPublicData().then(()=>{ go('landing'); lucide.createIcons(); });
+loadPublicData().then(async ()=>{
+  const resumed = await tryResumeSession();
+  if(resumed){ go('dashboard'); } else { go('landing'); }
+  lucide.createIcons();
+});
 </script>
 </body>
 </html>
