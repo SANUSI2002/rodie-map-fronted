@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1911,9 +1911,9 @@ function toggleModuleSidebar(scope){ moduleSidebarCollapsed[scope] = !moduleSide
 
 renderBoard = function(scope){
   const publicOnly = scope==='pub'; viewingPublic = publicOnly;
-  ensurePublicFilter(); ensureControlDropdown(scope); renderProductDropdown(scope, publicOnly);
+  ensureControlDropdown(scope); renderProductDropdown(scope, publicOnly);
   if(scope==='int'){ renderFilterPanel(scope+'-filter-panel'); renderModuleSidebar(scope); }
-  if(scope==='pub'){ renderFilterPanel(scope+'-filter-panel'); renderModuleSidebar(scope); }
+  if(scope==='pub'){ renderModuleSidebar(scope); }
   if(scope==='ft'){ renderFilterPanel('ft-filter-panel'); buildColMenu(); }
   updateFilterBadges(); ensureControlDropdown(scope);
   const view = boardView[scope];
@@ -2158,15 +2158,18 @@ submitFeature = async function(){
     visibility: document.getElementById('nf-visibility').value,
   };
   try {
+    let saved;
     if(editId){
-      await apiFetch('/features/'+editId, { method:'PATCH', body: JSON.stringify(payload) });
+      saved = mapFeatureDates(await apiFetch('/features/'+editId, { method:'PATCH', body: JSON.stringify(payload) }));
+      const idx = features.findIndex(f=>f.id===editId);
+      if(idx>-1) features[idx] = saved; else features.push(saved);
       showToast('Feature updated');
     } else {
-      await apiFetch('/features', { method:'POST', body: JSON.stringify(payload) });
+      saved = mapFeatureDates(await apiFetch('/features', { method:'POST', body: JSON.stringify(payload) }));
+      features.push(saved);
       showToast('Feature created');
     }
     closeModal();
-    await loadWorkspaceData();
     go(document.querySelector('.view.active').id.replace('view-',''));
   } catch(e){ showToast(e.message || 'Could not save the feature'); }
 };
@@ -2174,8 +2177,8 @@ deleteFeature = async function(id){
   if(!canEdit()){ showToast('Viewers cannot delete features'); return; }
   try {
     await apiFetch('/features/'+id, { method:'DELETE' });
+    features = features.filter(f=>f.id!==id && f.parentId!==id);
     closeDrawer();
-    await loadWorkspaceData();
     go(document.querySelector('.view.active').id.replace('view-',''));
     showToast('Feature deleted');
   } catch(e){ showToast(e.message || 'Could not delete the feature'); }
@@ -2191,15 +2194,18 @@ submitModule = async function(){
   const active = activeEl ? activeEl.checked : true;
   const productId = document.getElementById('nm-product').value;
   try {
+    let saved;
     if(editId){
-      await apiFetch('/modules/'+editId, { method:'PATCH', body: JSON.stringify({ name, active }) });
+      saved = await apiFetch('/modules/'+editId, { method:'PATCH', body: JSON.stringify({ name, active }) });
+      const idx = modules.findIndex(m=>m.id===editId);
+      if(idx>-1) modules[idx] = saved;
       showToast('Module updated');
     } else {
-      await apiFetch('/modules', { method:'POST', body: JSON.stringify({ productId, name }) });
+      saved = await apiFetch('/modules', { method:'POST', body: JSON.stringify({ productId, name }) });
+      modules.push(saved);
       showToast('Module created');
     }
     closeModal();
-    await loadWorkspaceData();
     go(document.querySelector('.view.active').id.replace('view-',''));
   } catch(e){ showToast(e.message || 'Could not save the module'); }
 };
@@ -2207,8 +2213,10 @@ toggleModuleActive = async function(id){
   const m = moduleById(id);
   const newActive = m.active===false;
   try {
-    await apiFetch('/modules/'+id, { method:'PATCH', body: JSON.stringify({ active:newActive }) });
-    await loadWorkspaceData();
+    const saved = await apiFetch('/modules/'+id, { method:'PATCH', body: JSON.stringify({ active:newActive }) });
+    const idx = modules.findIndex(x=>x.id===id);
+    if(idx>-1) modules[idx] = saved;
+    if(newActive===false){ ['int','pub'].forEach(s=>{ if(moduleFilter[s]===id) moduleFilter[s]='all'; }); }
     renderModulesTable(); renderBoard('int'); renderBoard('pub'); renderBoard('ft');
     showToast(m.name + (newActive?' activated':' made inactive'));
   } catch(e){ showToast(e.message || 'Could not update the module'); }
@@ -2219,7 +2227,7 @@ deleteModule = async function(id){
   if(count){ showToast('Delete all features under this module first'); return; }
   try {
     await apiFetch('/modules/'+id, { method:'DELETE' });
-    await loadWorkspaceData();
+    modules = modules.filter(m=>m.id!==id);
     renderModulesTable(); renderBoard('int');
     showToast('Module deleted');
   } catch(e){ showToast(e.message || 'Could not delete the module'); }
@@ -2237,17 +2245,18 @@ submitProduct = async function(){
     visibility: document.getElementById('np-visibility').value,
   };
   try {
-    await apiFetch('/products', { method:'POST', body: JSON.stringify(payload) });
+    const saved = await apiFetch('/products', { method:'POST', body: JSON.stringify(payload) });
+    products.push(saved);
     closeModal();
-    await loadWorkspaceData();
     showToast('Product created');
     go('products');
   } catch(e){ showToast(e.message || 'Could not create the product'); }
 };
 toggleProductVisibility = async function(id){
   try {
-    await apiFetch('/products/'+id+'/toggle-visibility', { method:'PATCH' });
-    await loadWorkspaceData();
+    const saved = await apiFetch('/products/'+id+'/toggle-visibility', { method:'PATCH' });
+    const idx = products.findIndex(p=>p.id===id);
+    if(idx>-1) products[idx] = Object.assign({}, products[idx], saved);
     renderInternalProducts();
     showToast('Visibility updated');
   } catch(e){ showToast(e.message || 'Could not update visibility'); }
@@ -2257,7 +2266,8 @@ deleteProduct = async function(id){
   if(features.some(f=>f.productId===id)){ showToast('Delete this product features first'); return; }
   try {
     await apiFetch('/products/'+id, { method:'DELETE' });
-    await loadWorkspaceData();
+    products = products.filter(p=>p.id!==id);
+    modules = modules.filter(m=>m.productId!==id);
     renderInternalProducts();
     showToast('Product deleted');
   } catch(e){ showToast(e.message || 'Could not delete the product'); }
@@ -2271,9 +2281,9 @@ submitUser = async function(){
   const role = document.getElementById('nu-role').value;
   try {
     const result = await apiFetch('/users', { method:'POST', body: JSON.stringify({ name, email, role }) });
+    users.push(result);
     closeModal();
-    await loadWorkspaceData();
-    showToast(result.tempPassword ? ('User created — temp password: ' + result.tempPassword) : ('Invite sent to ' + email));
+    showToast(result.emailSent ? ('Invite emailed to ' + email) : ('User created — email not sent (check RESEND_API_KEY)'));
     renderUsersTable();
   } catch(e){ showToast(e.message || 'Could not invite the user'); }
 };
@@ -2283,6 +2293,3 @@ loadPublicData().then(()=>{ go('landing'); lucide.createIcons(); });
 </script>
 </body>
 </html>
-
-
-
