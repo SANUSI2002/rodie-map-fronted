@@ -1,0 +1,2288 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadimap ? Wragby Product Roadmap Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --blue:#2E63F6; --blue-dark:#1E4FD6; --blue-tint:#EEF3FF;
+    --ink:#0B1220; --ink-soft:#45506B; --ink-faint:#8C94A8;
+    --bg:#F7F9FC; --surface:#FFFFFF; --border:#E7EAF2; --border-soft:#F0F2F8;
+    --st-planned:#94A3B8; --st-progress:#2E63F6; --st-beta:#A855F7; --st-released:#22C55E; --st-delayed:#F59E0B; --st-cancelled:#EF4444;
+    --radius-lg:18px; --radius-md:12px; --radius-sm:8px;
+    --shadow-sm:0 1px 2px rgba(11,18,32,0.04); --shadow-md:0 8px 24px rgba(11,18,32,0.08); --shadow-lg:0 20px 48px rgba(11,18,32,0.14);
+  }
+  body.dark{
+    --bg:#0B1220; --surface:#121A2B; --ink:#F1F5FB; --ink-soft:#B7C0D6; --ink-faint:#7C8AA3;
+    --border:#242E44; --border-soft:#1B2334; --blue-tint:#16264A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased; transition:background .2s ease,color .2s ease; }
+  h1,h2,h3,.display{font-family:'Inter Tight','Inter',sans-serif; letter-spacing:-0.02em;}
+  ::selection{background:var(--blue); color:#fff;}
+  a{color:inherit; text-decoration:none;} button{font-family:inherit; cursor:pointer;} input,select,textarea{font-family:inherit;}
+  .view{ display:none; } .view.active{ display:block; }
+
+  .btn{ display:inline-flex; align-items:center; gap:8px; border-radius:10px; font-weight:600; font-size:14px; padding:10px 18px; border:1px solid transparent; transition:all .15s ease; white-space:nowrap; }
+  .btn-primary{ background:var(--blue); color:#fff; } .btn-primary:hover{ background:var(--blue-dark); }
+  .btn-ghost{ background:transparent; color:var(--ink); border-color:var(--border); } .btn-ghost:hover{ border-color:var(--ink-faint); background:var(--border-soft); }
+  .btn-sm{ padding:8px 13px; font-size:13px; }
+
+  .public-nav{ position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; padding:18px 48px; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(10px); border-bottom:1px solid var(--border-soft); }
+  .logo{ display:flex; align-items:center; gap:9px; font-family:'Inter Tight'; font-weight:800; font-size:21px; color:var(--ink); cursor:pointer; }
+  .logo .pin{ color:var(--blue); }
+  .nav-links{ display:flex; align-items:center; gap:36px; font-size:14.5px; font-weight:500; color:var(--ink-soft); }
+  .nav-links a{ cursor:pointer; } .nav-links a:hover{ color:var(--ink); }
+
+  .hero{ padding:88px 48px 52px; max-width:920px; margin:0 auto; text-align:center; }
+  .eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--blue); background:var(--blue-tint); padding:7px 14px; border-radius:999px; margin-bottom:22px; }
+  .hero h1{ font-size:54px; line-height:1.08; font-weight:800; margin:0 0 20px; color:var(--ink); }
+  .hero h1 span{ color:var(--blue); }
+  .hero p{ font-size:18px; color:var(--ink-soft); line-height:1.6; max-width:620px; margin:0 auto 34px; }
+  .btn-lg{ padding:13px 26px; font-size:15px; border-radius:12px; }
+
+  .section-head{ max-width:1160px; margin:0 auto; padding:0 48px; display:flex; align-items:center; justify-content:space-between; }
+  .section-head h2{ font-size:15px; color:var(--ink-faint); font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin:0; }
+
+  .product-grid{ max-width:1160px; margin:0 auto; padding:0 48px; margin-top:20px; display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+  .product-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:26px 22px; transition:all .25s cubic-bezier(.2,.8,.2,1); cursor:pointer; }
+  .product-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-md); border-color:transparent; }
+  .p-icon{ width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .product-card h3{ font-size:16px; margin:0 0 6px; } .product-card p{ font-size:13px; color:var(--ink-faint); margin:0 0 16px; line-height:1.5; }
+  .p-meta{ display:flex; align-items:center; justify-content:space-between; font-size:12px; }
+  .p-count{ color:var(--ink-soft); font-weight:600; }
+  .p-bar{ height:5px; border-radius:99px; background:var(--border-soft); margin-top:14px; overflow:hidden; }
+  .p-bar i{ display:block; height:100%; border-radius:99px; }
+  .view-more-row{ max-width:1160px; margin:20px auto 0; padding:0 48px; text-align:center; }
+
+  .landing-footer{ margin-top:80px; border-top:1px solid var(--border-soft); padding:34px 48px; display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--ink-faint); }
+  .footer-links{ display:flex; gap:22px; }
+  .public-content{ max-width:1300px; margin:0 auto; padding:30px 48px 60px; }
+
+  .login-wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); }
+  .login-card{ width:100%; max-width:380px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:34px; box-shadow:var(--shadow-sm); }
+  .field{ margin-bottom:16px; } .field label{ display:block; font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+  .field input, .field select, .field textarea{ width:100%; border:1px solid var(--border); border-radius:10px; padding:10px 13px; font-size:14px; background:var(--surface); color:var(--ink); }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--blue); }
+
+  .app{ display:flex; min-height:100vh; background:var(--bg); }
+  .sidebar{ width:230px; background:var(--surface); border-right:1px solid var(--border); padding:20px 14px; display:flex; flex-direction:column; gap:2px; flex-shrink:0; }
+  .side-logo{ padding:8px 10px 22px; }
+  .side-link{ display:flex; align-items:center; gap:11px; padding:9px 12px; border-radius:9px; font-size:14px; font-weight:500; color:var(--ink-soft); transition:all .15s ease; }
+  .side-link svg{ width:17px; height:17px; } .side-link:hover{ background:var(--border-soft); color:var(--ink); }
+  .side-link.active{ background:var(--blue-tint); color:var(--blue); font-weight:600; }
+  .side-sep{ height:1px; background:var(--border-soft); margin:12px 6px; }
+  .hamburger-btn{ display:none; } .sidebar-scrim{ display:none; }
+
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{ height:64px; border-bottom:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:space-between; padding:0 26px; flex-shrink:0; gap:14px; }
+  .search-box{ display:flex; align-items:center; gap:9px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:9px 14px; width:300px; color:var(--ink-faint); font-size:13.5px; }
+  .search-box input{ border:none; background:transparent; outline:none; font-size:13.5px; width:100%; color:var(--ink); }
+  .search-box svg{ width:15px; height:15px; flex-shrink:0; }
+  .top-right{ display:flex; align-items:center; gap:12px; position:relative; }
+  .icon-btn{ width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; background:transparent; border:none; color:var(--ink-soft); position:relative; }
+  .icon-btn:hover{ background:var(--border-soft); }
+  .dot-badge{ position:absolute; top:6px; right:6px; width:7px; height:7px; border-radius:50%; background:var(--st-delayed); border:1.5px solid var(--surface); }
+  .workspace-pill{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; padding:7px 12px; border:1px solid var(--border); border-radius:9px; }
+  .avatar{ width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,var(--blue),#7DA2FF); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:13px; cursor:pointer; }
+
+  .content{ padding:24px 30px; overflow:visible; }
+  .page-head{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; gap:16px; flex-wrap:wrap; }
+  .page-head h1{ font-size:22px; margin:0 0 4px; } .page-head p{ margin:0; color:var(--ink-faint); font-size:13.5px; }
+
+  .dd{ position:relative; } .dd-panel{ position:absolute; top:calc(100% + 8px); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); z-index:80; display:none; }
+  .dd-panel.open{ display:block; } .dd-panel.right{ right:0; } .dd-panel.left{ left:0; }
+  .notif-panel{ width:280px; padding:8px; } .notif-item{ padding:10px; border-radius:8px; font-size:12.5px; } .notif-item:hover{ background:var(--bg); }
+  .notif-item b{ display:block; font-size:13px; margin-bottom:2px; } .notif-item span{ color:var(--ink-faint); font-size:11.5px; }
+  .avatar-menu{ width:200px; padding:8px; } .avatar-menu .who{ padding:8px 10px 10px; border-bottom:1px solid var(--border-soft); margin-bottom:6px; }
+  .avatar-menu .who b{ display:block; font-size:13.5px; } .avatar-menu .who span{ font-size:12px; color:var(--ink-faint); }
+  .avatar-menu a{ display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; font-size:13.5px; color:var(--ink-soft); } .avatar-menu a:hover{ background:var(--bg); color:var(--ink); }
+  .avatar-menu-item{ display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; font-size:13.5px; color:var(--ink-soft); cursor:pointer; } .avatar-menu-item:hover{ background:var(--bg); color:var(--ink); }
+  .filter-panel{ width:260px; padding:16px; } .filter-panel h4{ font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; margin:0 0 8px; }
+  .filter-panel .row{ display:flex; align-items:center; gap:8px; font-size:13px; padding:5px 0; } .filter-actions{ display:flex; gap:8px; margin-top:12px; }
+  .product-select{ position:relative; } .product-select button{ display:flex; align-items:center; gap:9px; border:1px solid var(--border); border-radius:10px; padding:9px 14px; font-size:13.5px; font-weight:600; background:var(--surface); color:var(--ink); }
+  .product-select .sw{ width:9px; height:9px; border-radius:3px; }
+  .product-select-panel{ width:220px; padding:6px; max-height:280px; overflow-y:auto; }
+  .product-select-panel .opt{ display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; font-size:13.5px; font-weight:500; } .product-select-panel .opt:hover{ background:var(--bg); }
+  .product-select-panel .opt.active{ background:var(--blue-tint); color:var(--blue); font-weight:700; }
+  .col-menu label{ display:flex; align-items:center; gap:9px; font-size:13px; padding:7px 6px; border-radius:6px; cursor:pointer; } .col-menu label:hover{ background:var(--border-soft); }
+
+  .toggle{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; user-select:none; }
+  .toggle-track{ width:34px; height:19px; border-radius:99px; background:var(--border); position:relative; transition:background .2s ease; }
+  .toggle-track::after{ content:''; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%; background:#fff; box-shadow:var(--shadow-sm); transition:transform .2s ease; }
+  .toggle.on .toggle-track{ background:var(--blue); } .toggle.on .toggle-track::after{ transform:translateX(15px); }
+
+  .prio-badge{ font-size:9.5px; font-weight:800; border-radius:5px; padding:1px 5px; flex-shrink:0; }
+  .seg{ display:flex; background:var(--border-soft); border-radius:9px; padding:3px; }
+  .seg button{ border:none; background:transparent; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:7px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; }
+  .seg button.active{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow-sm); }
+
+  .rm-toolbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+  .toolbar-left{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; } .toolbar-right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+  /* Roadmap page layout: mini module sidebar + board */
+  .rm-body{ display:flex; gap:16px; align-items:flex-start; }
+  .module-sidebar{ width:190px; flex-shrink:0; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:10px; }
+  .module-sidebar h4{ font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; margin:4px 6px 8px; }
+  .msi{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:8px; font-size:13px; font-weight:500; color:var(--ink-soft); cursor:pointer; }
+  .msi:hover{ background:var(--bg); } .msi.active{ background:var(--blue-tint); color:var(--blue); font-weight:700; }
+  .msi .cnt{ font-size:11px; color:var(--ink-faint); }
+  .msi.active .cnt{ color:var(--blue); }
+  .rm-main{ flex:1; min-width:0; }
+
+  .gantt-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; }
+  .gantt-scroll{ display:flex; overflow-x:auto; }
+  .gantt-fixed{ width:270px; flex-shrink:0; border-right:1px solid var(--border); position:sticky; left:0; background:var(--surface); z-index:5; }
+  .gantt-timeline{ flex-shrink:0; }
+  .gantt-head-row{ height:46px; border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; font-size:11.5px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
+  .month-header{ display:flex; height:46px; border-bottom:1px solid var(--border); }
+  .month-cell{ flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700; border-right:1px solid var(--border-soft); color:var(--ink-soft); }
+  .grp-head{ background:var(--bg); padding:10px 16px; font-size:12px; font-weight:700; color:var(--ink-soft); display:flex; align-items:center; gap:8px; height:38px; box-sizing:border-box; border-bottom:1px solid var(--border-soft); cursor:pointer; }
+  .grp-spacer{ height:38px; background:var(--bg); border-bottom:1px solid var(--border-soft); }
+  .mod-head{ background:var(--surface); padding:8px 16px 8px 30px; font-size:11.5px; font-weight:700; color:var(--ink-faint); display:flex; align-items:center; gap:7px; height:32px; box-sizing:border-box; border-bottom:1px solid var(--border-soft); cursor:pointer; }
+  .mod-head .chev{ transition:transform .15s ease; } .mod-head.collapsed .chev{ transform:rotate(-90deg); }
+  .mod-spacer{ height:32px; background:var(--surface); border-bottom:1px solid var(--border-soft); }
+  .feat-row{ height:52px; display:flex; align-items:center; padding:0 16px; border-bottom:1px solid var(--border-soft); gap:8px; }
+  .feat-row .fdot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .feat-row .fname{ font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .feat-row .fmodule{ font-size:11px; color:var(--ink-faint); margin-left:auto; flex-shrink:0; }
+  .add-sub-btn{ width:17px; height:17px; border-radius:5px; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; color:var(--ink-faint); flex-shrink:0; }
+  .add-sub-btn:hover{ border-color:var(--blue); color:var(--blue); }
+  .lane-row{ position:relative; height:52px; border-bottom:1px solid var(--border-soft); }
+  .bar{ position:absolute; top:11px; height:30px; border-radius:8px; display:flex; align-items:center; padding:0 10px; font-size:11.5px; font-weight:700; color:#fff; overflow:hidden; white-space:nowrap; box-shadow:var(--shadow-sm); cursor:pointer; transition:transform .15s ease; }
+  .bar:hover{ transform:translateY(-1px); box-shadow:var(--shadow-md); }
+  .bar .fill{ position:absolute; left:0; top:0; bottom:0; background:rgba(255,255,255,0.28); border-radius:8px 0 0 8px; }
+  .bar span{ position:relative; z-index:2; }
+  .today-line{ position:absolute; top:0; bottom:0; width:2px; background:var(--blue); z-index:3; }
+  .today-line::before{ content:'TODAY'; position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-size:9.5px; font-weight:800; color:var(--blue); background:var(--blue-tint); padding:2px 6px; border-radius:5px; white-space:nowrap; }
+  .bar-flag{ position:absolute; top:13px; height:26px; display:flex; align-items:center; gap:5px; padding:0 9px; border-radius:7px; font-size:11px; font-weight:700; white-space:nowrap; z-index:2; }
+  .bar-flag svg{ width:12px; height:12px; }
+  .empty-state{ padding:60px 20px; text-align:center; color:var(--ink-faint); font-size:13.5px; }
+
+  .gantt-tooltip{ position:fixed; z-index:300; background:var(--ink); color:var(--bg); font-size:12px; font-weight:500; padding:9px 12px; border-radius:9px; pointer-events:none; opacity:0; transition:opacity .12s ease; box-shadow:var(--shadow-lg); max-width:240px; }
+  .gantt-tooltip b{ display:block; font-size:12.5px; font-weight:700; margin-bottom:3px; } .gantt-tooltip .tt-range{ opacity:.75; }
+
+  .ftable-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); overflow:auto; }
+  .ftable{ width:100%; border-collapse:collapse; font-size:13px; min-width:920px; }
+  .ftable thead th{ text-align:left; font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg); white-space:nowrap; }
+  .ftable tbody td{ padding:11px 16px; border-bottom:1px solid var(--border-soft); vertical-align:middle; }
+  .ftable tbody tr:hover{ background:var(--bg); cursor:pointer; } .ftable tbody tr:last-child td{ border-bottom:none; }
+  .mini-bar-bg{ width:60px; height:6px; border-radius:99px; background:var(--border-soft); display:inline-block; overflow:hidden; vertical-align:middle; margin-right:6px; }
+  .mini-bar-fg{ height:100%; border-radius:99px; }
+  .status-badge{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:7px; white-space:nowrap; }
+  .status-badge .dot{ width:6px; height:6px; border-radius:50%; }
+
+  .kanban-board{ display:flex; gap:14px; overflow-x:auto; padding-bottom:8px; }
+  .kanban-col{ width:250px; flex-shrink:0; }
+  .kanban-col-head{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--ink-soft); padding:0 4px 10px; }
+  .kanban-col-head .sw{ width:8px; height:8px; border-radius:50%; }
+  .kanban-col-head .cnt{ margin-left:auto; color:var(--ink-faint); font-weight:600; }
+  .kanban-card{ background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:13px; margin-bottom:10px; cursor:pointer; transition:box-shadow .15s ease; }
+  .kanban-card:hover{ box-shadow:var(--shadow-md); }
+  .kanban-card .kt{ font-size:13px; font-weight:700; margin-bottom:6px; }
+  .kanban-card .km{ font-size:11px; color:var(--ink-faint); margin-bottom:9px; }
+  .kanban-card .kf{ display:flex; align-items:center; justify-content:space-between; }
+
+  .stat-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:20px; }
+  .stat-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 16px 14px; }
+  .stat-card .lbl{ font-size:12px; color:var(--ink-faint); font-weight:600; margin-bottom:8px; }
+  .stat-card .val{ font-size:24px; font-weight:800; font-family:'Inter Tight'; }
+  .stat-card .trend{ font-size:11.5px; margin-top:6px; font-weight:600; }
+  .trend.up{ color:var(--st-released); } .trend.down{ color:var(--st-delayed); }
+  .grid-2{ display:grid; grid-template-columns:1.4fr 1fr; gap:16px; margin-bottom:16px; }
+  .grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+  .panel{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; }
+  .panel h3{ font-size:14.5px; margin:0 0 16px; }
+  .bars{ display:flex; align-items:flex-end; gap:10px; height:130px; }
+  .bars .b{ flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; justify-content:flex-end; }
+  .bars .b i{ width:100%; border-radius:6px 6px 3px 3px; background:var(--blue); }
+  .bars .b .pct{ font-size:10.5px; font-weight:700; }
+  .bars .b span{ font-size:10px; color:var(--ink-faint); font-weight:600; }
+  .trend-panel{ min-height:260px; }
+  .trend-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:8px; }
+  .trend-head h3{ margin:0 0 4px; }
+  .trend-sub{ font-size:12px; color:var(--ink-faint); line-height:1.45; }
+  .trend-kpis{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .trend-kpi{ border:1px solid var(--border); background:var(--bg); border-radius:10px; padding:7px 10px; min-width:82px; }
+  .trend-kpi b{ display:block; font-size:16px; font-family:'Inter Tight'; color:var(--ink); }
+  .trend-kpi span{ display:block; font-size:10.5px; color:var(--ink-faint); font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+  .trend-svg{ width:100%; height:190px; overflow:visible; }
+  .trend-legend{ display:flex; align-items:center; gap:14px; margin-top:8px; font-size:11.5px; color:var(--ink-faint); font-weight:700; }
+  .trend-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .trend-legend i{ width:18px; height:3px; border-radius:999px; display:inline-block; }
+  .activity-row{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--border-soft); font-size:13px; }
+  .activity-row:last-child{ border-bottom:none; }
+  .a-dot{ width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+  .a-text b{ font-weight:600; } .a-time{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+
+  .user-table tr td:first-child{ display:flex; align-items:center; gap:10px; }
+  .u-avatar{ width:30px; height:30px; border-radius:8px; background:var(--blue-tint); color:var(--blue); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; }
+  .role-badge{ font-size:11px; font-weight:700; padding:4px 9px; border-radius:7px; background:var(--border-soft); color:var(--ink-soft); }
+  .u-disabled{ opacity:.5; }
+
+  .modal-overlay{ position:fixed; inset:0; background:rgba(11,18,32,0.4); z-index:400; opacity:0; pointer-events:none; transition:opacity .2s ease; display:flex; align-items:center; justify-content:center; }
+  .modal-overlay.open{ opacity:1; pointer-events:auto; }
+  .modal{ background:var(--surface); border-radius:var(--radius-lg); width:100%; max-width:460px; padding:28px; box-shadow:var(--shadow-lg); transform:translateY(12px) scale(.98); transition:transform .2s ease; max-height:86vh; overflow-y:auto; }
+  .modal-overlay.open .modal{ transform:translateY(0) scale(1); }
+  .modal h2{ font-size:18px; margin:0 0 4px; } .modal .sub{ color:var(--ink-faint); font-size:13px; margin-bottom:20px; }
+  .modal-close{ float:right; } .modal-actions{ display:flex; gap:10px; margin-top:22px; } .modal-actions .btn{ flex:1; justify-content:center; }
+  .field-row{ display:flex; gap:10px; } .field-row .field{ flex:1; }
+
+  .drawer-overlay{ position:fixed; inset:0; background:rgba(11,18,32,0.35); z-index:200; opacity:0; pointer-events:none; transition:opacity .25s ease; }
+  .drawer-overlay.open{ opacity:1; pointer-events:auto; }
+  .drawer{ position:fixed; top:0; right:0; bottom:0; width:400px; background:var(--surface); z-index:201; box-shadow:var(--shadow-lg); transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1); padding:26px; overflow-y:auto; }
+  .drawer-overlay.open .drawer{ transform:translateX(0); }
+  .drawer-close{ position:absolute; top:22px; right:22px; }
+  .drawer h2{ font-size:19px; margin:0 40px 6px 0; } .drawer .sub{ color:var(--ink-faint); font-size:13px; margin-bottom:20px; }
+  .drawer-field{ margin-bottom:16px; } .drawer-field label{ font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:6px; }
+  .drawer-field .value{ font-size:14px; font-weight:500; }
+  .drawer-progress-bg{ height:8px; background:var(--border-soft); border-radius:99px; overflow:hidden; margin-top:6px; }
+  .drawer-progress-fg{ height:100%; border-radius:99px; }
+
+  .toast{ position:fixed; bottom:26px; right:26px; background:var(--ink); color:var(--bg); padding:13px 18px; border-radius:11px; font-size:13.5px; font-weight:600; box-shadow:var(--shadow-lg); z-index:500; display:flex; align-items:center; gap:10px; transform:translateY(20px); opacity:0; transition:all .25s ease; }
+  .toast.show{ transform:translateY(0); opacity:1; }
+
+  @media (max-width:1100px){ .stat-grid{ grid-template-columns:repeat(3,1fr); } .grid-2,.grid-3{ grid-template-columns:1fr; } .product-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:880px){
+    .sidebar{ position:fixed; top:0; left:0; bottom:0; z-index:250; width:250px; transform:translateX(-100%); transition:transform .25s cubic-bezier(.2,.8,.2,1); box-shadow:var(--shadow-lg); }
+    .sidebar.mobile-open{ transform:translateX(0); }
+    .sidebar-scrim{ display:block; position:fixed; inset:0; background:rgba(11,18,32,0.35); z-index:240; opacity:0; pointer-events:none; transition:opacity .25s ease; }
+    .sidebar-scrim.open{ opacity:1; pointer-events:auto; }
+    .hamburger-btn{ display:flex; }
+    .topbar{ padding:0 14px; } .search-box{ width:auto; flex:1; min-width:0; } .workspace-pill span{ display:none; } .workspace-pill{ padding:8px; }
+    .content{ padding:16px; } .page-head{ flex-direction:column; align-items:flex-start; gap:12px; } .page-head > div:last-child{ width:100%; }
+    .public-nav{ padding:14px 18px; } .nav-links{ display:none; } .hero{ padding:44px 20px 32px; } .hero h1{ font-size:30px; } .hero p{ font-size:15px; }
+    .section-head{ padding:0 20px; flex-direction:column; align-items:flex-start; gap:4px; } .product-grid{ padding:0 20px; grid-template-columns:1fr; }
+    .public-content{ padding:16px 18px 40px; } .landing-footer{ padding:24px 20px; flex-direction:column; gap:12px; text-align:center; }
+    .stat-grid{ grid-template-columns:repeat(2,1fr); } .grid-2,.grid-3{ grid-template-columns:1fr; }
+    .rm-toolbar{ flex-direction:column; align-items:stretch; } .toolbar-left,.toolbar-right{ justify-content:space-between; }
+    .rm-body{ flex-direction:column; } .module-sidebar{ width:100%; }
+    .gantt-fixed{ width:170px; } .feat-row .fmodule{ display:none; }
+    .modal{ max-width:92vw; padding:20px; } .field-row{ flex-direction:column; gap:0; } .drawer{ width:100%; }
+    .login-card{ padding:26px 22px; } .dd-panel{ max-width:88vw; }
+  }
+  @media (max-width:480px){ .stat-grid{ grid-template-columns:1fr 1fr; } .hero h1{ font-size:24px; } .btn{ font-size:13px; padding:9px 14px; } .gantt-fixed{ width:140px; } }
+/* final-touch-overrides */
+
+  .sidebar{ transition:width .2s ease, padding .2s ease; }
+  .sidebar.collapsed{ width:66px; padding:20px 10px; }
+  .side-logo{ display:flex; align-items:center; gap:7px; white-space:nowrap; overflow:hidden; }
+  .side-logo .side-brand{ transition:opacity .15s ease; }
+  .sidebar.collapsed .side-brand, .sidebar.collapsed .side-link span, .sidebar.collapsed .side-collapse span{ opacity:0; width:0; overflow:hidden; }
+  .side-collapse{ margin:0 0 12px; width:100%; justify-content:flex-start; }
+  .module-sidebar{ transition:width .2s ease, padding .2s ease; }
+  .module-sidebar.collapsed{ width:46px; padding:10px 6px; }
+  .module-sidebar.collapsed .module-list{ display:none; }
+  .module-toggle{ width:30px; height:30px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--ink-soft); display:flex; align-items:center; justify-content:center; margin-bottom:8px; cursor:pointer; }
+  .filter-panel{ width:292px; padding:10px; }
+  .filter-criterion{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 10px; border-radius:8px; font-size:13.5px; font-weight:600; color:var(--ink-soft); }
+  .filter-criterion:hover{ background:var(--bg); color:var(--ink); }
+  .filter-criterion button{ width:24px; height:24px; border-radius:7px; border:1px solid var(--border); background:var(--surface); color:var(--blue); display:flex; align-items:center; justify-content:center; font-weight:800; cursor:pointer; }
+  .active-filter-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .active-filter{ position:relative; display:inline-flex; align-items:center; gap:7px; border:1px solid var(--border); border-radius:9px; padding:7px 9px; background:var(--surface); font-size:12.5px; font-weight:700; cursor:pointer; }
+  .active-filter b{ color:var(--ink-soft); font-size:12px; }
+  .active-filter .remove{ color:var(--ink-faint); font-size:14px; line-height:1; }
+  .filter-value-panel{ width:220px; padding:6px; max-height:250px; overflow-y:auto; }
+  .filter-value-panel .opt{ display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:8px; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .filter-value-panel .opt:hover, .filter-value-panel .opt.active{ background:var(--blue-tint); color:var(--blue); }
+  .feature-toggle{ width:18px; height:18px; border:none; background:transparent; color:var(--ink-faint); display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; flex-shrink:0; }
+  .feature-toggle.collapsed{ transform:rotate(-90deg); }
+  .add-sub-btn{ width:24px; height:24px; border-radius:8px; border:1px solid var(--blue); background:var(--blue-tint); color:var(--blue); display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:17px; line-height:1; box-shadow:0 1px 3px rgba(46,99,246,.18); flex-shrink:0; }
+  .add-sub-btn:hover{ background:var(--blue); color:#fff; transform:translateY(-1px); }
+  .ftable .date-cell{ white-space:nowrap; }
+  .filter-inline-host{ position:static; display:flex; }
+  .filter-strip{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; border:1px solid var(--border); border-radius:12px; padding:9px 11px; background:color-mix(in srgb, var(--surface) 92%, var(--bg)); box-shadow:var(--shadow-sm); }
+  .filter-control{ display:flex; flex-direction:column; gap:4px; min-width:148px; }
+  .filter-control-label{ display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:var(--ink-soft); }
+  .filter-control-label button{ border:0; background:transparent; color:var(--ink-faint); font-size:16px; line-height:1; padding:0; cursor:pointer; }
+  .filter-control select{ min-width:148px; border:1px solid var(--border); border-radius:10px; padding:9px 30px 9px 11px; background:var(--surface); color:var(--ink); font-size:13px; font-weight:500; }
+  .more-filter-btn{ border:2px solid color-mix(in srgb, var(--ink-faint) 38%, var(--border)); background:var(--surface); color:var(--blue); border-radius:12px; padding:9px 14px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:7px; box-shadow:0 1px 2px rgba(11,18,32,.08); }
+  .more-filter-btn .plus{ font-size:20px; font-weight:500; line-height:1; }
+  .reset-filter-btn{ border:0; background:transparent; color:#ff2d2d; font-size:14px; font-weight:700; padding:9px 3px; }
+  .filter-panel.more-filter-menu{ width:230px; padding:12px 10px; }
+  .filter-panel.more-filter-menu .filter-criterion{ justify-content:flex-start; gap:13px; padding:10px 12px; font-size:14px; font-weight:500; color:var(--ink); }
+  .filter-panel.more-filter-menu .filter-criterion button{ border:0; background:transparent; color:var(--ink-soft); font-size:22px; width:18px; height:18px; padding:0; }
+  .module-node{ border-bottom:1px solid var(--border-soft); }
+  .module-node:last-child{ border-bottom:0; }
+  .module-node-head{ width:100%; display:flex; align-items:center; gap:8px; padding:9px 7px; border:0; background:transparent; color:var(--ink); font-weight:700; text-align:left; border-radius:8px; cursor:pointer; }
+  .module-node-head:hover{ background:var(--bg); }
+  .module-node-head .cnt{ margin-left:auto; color:var(--ink-faint); font-size:12px; }
+  .module-node-head .chev{ color:var(--ink-faint); transition:transform .15s ease; }
+  .module-node.closed .module-node-head .chev{ transform:rotate(-90deg); }
+  .module-feature-tree{ padding:0 4px 8px 24px; display:flex; flex-direction:column; gap:4px; }
+  .module-node.closed .module-feature-tree{ display:none; }
+  .module-feature-row{ display:flex; align-items:center; gap:7px; min-height:28px; padding:4px 5px; border-radius:7px; font-size:12.5px; color:var(--ink-soft); cursor:pointer; }
+  .module-feature-row:hover{ background:var(--blue-tint); color:var(--blue); }
+  .module-feature-row .name{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .module-feature-row .add-sub-btn{ margin-left:auto; width:21px; height:21px; font-size:15px; }
+  .product-cell-with-add{ display:flex; align-items:flex-start; gap:8px; }
+  .product-cell-with-add .add-sub-btn{ margin-top:1px; width:22px; height:22px; font-size:15px; }
+  .module-cell-dd{ width:max-content; max-width:180px; }
+  .module-cell-btn{ border:0; background:transparent; color:var(--ink); font-size:inherit; padding:0; display:inline-flex; align-items:center; gap:6px; text-align:left; cursor:pointer; }
+  .module-cell-btn:hover{ color:var(--blue); }
+  .module-cell-panel{ width:270px; max-height:320px; overflow:auto; padding:8px; }
+  .module-table-name{ max-width:260px; }
+  .module-table-name .module-cell-btn{ font-weight:700; }
+  .inactive-module-badge{ display:inline-flex; align-items:center; border-radius:999px; padding:2px 7px; margin-left:6px; background:#F1F5F9; color:#64748B; font-size:11px; font-weight:800; vertical-align:middle; }
+
+</style>
+</head>
+<body>
+
+<!-- ================= LANDING (public) ================= -->
+<section class="view active" id="view-landing">
+  <nav class="public-nav">
+    <div class="logo" onclick="go('landing')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" class="pin"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8z" fill="currentColor"/><circle cx="12" cy="10" r="3.2" fill="white"/></svg>Roadimap</div>
+    <div class="nav-links"><a onclick="go('public-roadmap')">Roadmap</a><a onclick="document.getElementById('landing-products').scrollIntoView({behavior:'smooth'})">Products</a></div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><i data-lucide="moon" id="theme-icon"></i></button>
+      <button class="btn btn-primary" onclick="go('login')">Log in</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <div class="eyebrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>Now live across <span id="public-product-count">2</span> products</div>
+    <h1>See what Wragby is building, <span>before it ships.</span></h1>
+    <p>One roadmap for every product, module and feature ? so developers know priorities, sales can sell what's coming, and customers are never surprised.</p>
+    <div style="display:flex; justify-content:center;">
+      <button class="btn btn-primary btn-lg" onclick="go('public-roadmap')">Explore the roadmap</button>
+    </div>
+  </div>
+  <div class="section-head" id="landing-products"><h2>Products</h2></div>
+  <div class="product-grid" id="landing-product-grid"></div>
+  <div class="view-more-row" id="landing-view-more"></div>
+  <footer class="landing-footer"><span>Designed by the Wragby Product Team</span><div class="footer-links"><a>Privacy</a><a>Terms</a><a>Twitter</a><a>LinkedIn</a></div></footer>
+</section>
+
+<!-- ================= PUBLIC ROADMAP ================= -->
+<section class="view" id="view-public-roadmap">
+  <nav class="public-nav">
+    <div class="logo" onclick="go('landing')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" class="pin"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8z" fill="currentColor"/><circle cx="12" cy="10" r="3.2" fill="white"/></svg>Roadimap</div>
+    <div class="nav-links"></div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><i data-lucide="moon"></i></button>
+      <button class="btn btn-primary" onclick="go('login')">Log in</button>
+    </div>
+  </nav>
+  <div class="public-content">
+    <div class="page-head"><div><h1>Public roadmap</h1><p>Read-only ? showing planned, in-progress and released features that are public</p></div></div>
+    <div class="rm-toolbar">
+      <div class="toolbar-left">
+        <div class="product-select dd" id="pub-product-dd">
+          <button onclick="toggleDD('pub-product-panel')"><span class="sw" id="pub-product-sw" style="background:var(--blue);"></span><span id="pub-product-label">All products</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="dd-panel left product-select-panel" id="pub-product-panel"></div>
+        </div>
+        <div class="seg" id="pub-view-seg">
+          <button class="active" onclick="setBoardView('pub','gantt')"><i data-lucide="bar-chart-2" style="width:13px;height:13px;"></i>Gantt</button>
+          <button onclick="setBoardView('pub','list')"><i data-lucide="list" style="width:13px;height:13px;"></i>List</button>
+          <button onclick="setBoardView('pub','kanban')"><i data-lucide="columns" style="width:13px;height:13px;"></i>Kanban</button>
+        </div>
+        <div class="seg" id="pub-zoom-seg">
+          <button class="active" onclick="setZoom('month','pub')">Month</button><button onclick="setZoom('quarter','pub')">Quarter</button><button onclick="setZoom('year','pub')">Year</button>
+        </div>
+      </div>
+      <div class="dd">
+        <button class="btn btn-ghost btn-sm" onclick="toggleDD('pub-export-panel')"><i data-lucide="download" style="width:14px;height:14px;"></i>Export<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="dd-panel right" id="pub-export-panel" style="width:210px; padding:6px;">
+          <a class="avatar-menu-item" onclick="exportRoadmapImage('pub')"><i data-lucide="image" style="width:15px;height:15px;"></i>Export as Image (PNG)</a>
+          <a class="avatar-menu-item" onclick="exportRoadmapPDF('pub')"><i data-lucide="file-text" style="width:15px;height:15px;"></i>Export as PDF</a>
+          <a class="avatar-menu-item" onclick="exportRoadmapStyled('pub')"><i data-lucide="route" style="width:15px;height:15px;"></i>Export road-style roadmap</a>
+        </div>
+      </div>
+    </div>
+    <div class="rm-body">
+      <aside class="module-sidebar" id="pub-module-sidebar"></aside>
+      <div class="rm-main">
+        <div id="pub-gantt-wrap" class="gantt-wrap">
+          <div class="gantt-scroll">
+            <div class="gantt-fixed"><div class="gantt-head-row">Feature</div><div id="pub-gantt-fixed-rows"></div></div>
+            <div class="gantt-timeline"><div class="month-header" id="pub-month-header"></div><div id="pub-gantt-lane-rows" style="position:relative;"></div></div>
+          </div>
+        </div>
+        <div id="pub-list-wrap" class="ftable-wrap" style="display:none;"><table class="ftable"><thead><tr id="pub-list-head"></tr></thead><tbody id="pub-list-body"></tbody></table></div>
+        <div id="pub-kanban-wrap" class="kanban-board" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LOGIN ================= -->
+<section class="view" id="view-login">
+  <div class="login-wrap"><div class="login-card">
+    <div class="logo" style="margin-bottom:22px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" class="pin"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8z" fill="currentColor"/><circle cx="12" cy="10" r="3.2" fill="white"/></svg>Roadimap</div>
+    <h2 style="font-size:18px; margin:0 0 4px;">Log in</h2><p style="color:var(--ink-faint); font-size:13px; margin-bottom:20px;">Internal team access only.</p>
+    <div class="field"><label>Email</label><input type="email" id="login-email" value="dami@wragby.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" value="????????"></div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="doLogin()">Log in</button>
+    <div style="display:flex; align-items:center; gap:10px; margin:18px 0;"><div style="flex:1; height:1px; background:var(--border);"></div><span style="font-size:11.5px; color:var(--ink-faint);">OR</span><div style="flex:1; height:1px; background:var(--border);"></div></div>
+    <button class="btn btn-ghost" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="doLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 010-4.2V7.06H2.18a11 11 0 000 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+      Sign in with Google
+    </button>
+    <button class="btn btn-ghost" style="width:100%; justify-content:center;" onclick="doLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#F25022" d="M1 1h10v10H1z"/><path fill="#7FBA00" d="M13 1h10v10H13z"/><path fill="#00A4EF" d="M1 13h10v10H1z"/><path fill="#FFB900" d="M13 13h10v10H13z"/></svg>
+      Sign in with Microsoft
+    </button>
+    <p style="text-align:center; font-size:12.5px; color:var(--ink-faint); margin-top:16px;">Not on the team? <a onclick="go('landing')" style="color:var(--blue); cursor:pointer;">Back to the public roadmap</a></p>
+  </div></div>
+</section>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="view" id="view-dashboard">
+  <div class="app">
+    <aside class="sidebar" id="sidebar-dashboard"></aside>
+    <div class="main"><div class="topbar" id="topbar-dashboard"></div>
+      <div class="content">
+        <div class="page-head"><div><h1>Dashboard</h1></div>
+          <div style="display:flex; gap:10px;"><button class="btn btn-ghost" onclick="exportCSV(getAllFeatures(), 'dashboard-export')"><i data-lucide="download" style="width:14px;height:14px;"></i>Export</button><button class="btn btn-primary" onclick="openFeatureModal()">+ Add Feature</button></div>
+        </div>
+        <div class="rm-toolbar" style="margin-bottom:20px;">
+          <div class="toolbar-left">
+            <div class="product-select dd" id="dash-product-dd">
+              <button onclick="toggleDD('dash-product-panel')"><span class="sw" id="dash-product-sw" style="background:var(--blue);"></span><span id="dash-product-label">All products</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+              <div class="dd-panel left product-select-panel" id="dash-product-panel"></div>
+            </div>
+            <div class="seg" id="dash-period-seg">
+              <button class="active" onclick="setDashPeriod('month')">Month</button><button onclick="setDashPeriod('quarter')">Quarter</button><button onclick="setDashPeriod('year')">Year</button>
+            </div>
+          </div>
+        </div>
+        <div class="stat-grid" id="stat-grid"></div>
+        <div class="grid-2">
+          <div class="panel"><h3>Features shipped per product</h3><div class="bars" id="bars-chart"></div></div>
+          <div class="panel"><h3>Status distribution</h3><div style="display:flex; align-items:center; gap:20px;">
+            <svg width="120" height="120" viewBox="0 0 42 42" id="status-donut"></svg>
+            <div style="flex:1;" id="status-legend"></div>
+          </div></div>
+        </div>
+        <div class="grid-3">
+          <div class="panel trend-panel">
+            <div class="trend-head">
+              <div><h3>Delivery trend</h3><div class="trend-sub" id="trend-subtitle">Actual shipped features over time</div></div>
+              <div class="trend-kpis" id="trend-kpis"></div>
+            </div>
+            <svg class="trend-svg" id="trend-chart" viewBox="0 0 520 190"></svg>
+            <div class="trend-legend"><span><i style="background:var(--blue);"></i>Shipped</span><span><i style="background:#94A3B8;"></i>Target</span></div>
+          </div>
+          <div class="panel"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"><h3 style="margin:0;">Recent releases</h3><button class="btn btn-ghost btn-sm" onclick="go('features')">View more</button></div><div id="recent-releases-list"></div></div>
+          <div class="panel"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"><h3 style="margin:0;">Upcoming releases</h3><button class="btn btn-ghost btn-sm" onclick="go('features')">View more</button></div><div id="upcoming-list"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INTERNAL ROADMAP ================= -->
+<section class="view" id="view-roadmap">
+  <div class="app">
+    <aside class="sidebar" id="sidebar-roadmap"></aside>
+    <div class="main"><div class="topbar" id="topbar-roadmap"></div>
+      <div class="content">
+        <div class="page-head"><div><h1>Roadmap</h1></div></div>
+        <div class="rm-toolbar">
+          <div class="toolbar-left">
+            <div class="product-select dd" id="int-product-dd">
+              <button onclick="toggleDD('int-product-panel')"><span class="sw" id="int-product-sw" style="background:var(--blue);"></span><span id="int-product-label">All products</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+              <div class="dd-panel left product-select-panel" id="int-product-panel"></div>
+            </div>
+            <div class="seg" id="int-view-seg">
+              <button class="active" onclick="setBoardView('int','gantt')"><i data-lucide="bar-chart-2" style="width:13px;height:13px;"></i>Gantt</button>
+              <button onclick="setBoardView('int','list')"><i data-lucide="list" style="width:13px;height:13px;"></i>List</button>
+              <button onclick="setBoardView('int','kanban')"><i data-lucide="columns" style="width:13px;height:13px;"></i>Kanban</button>
+            </div>
+            <div class="seg" id="int-zoom-seg">
+              <button class="active" onclick="setZoom('month','int')">Month</button><button onclick="setZoom('quarter','int')">Quarter</button><button onclick="setZoom('year','int')">Year</button>
+            </div>
+            <select id="int-date-quick" onchange="setDateQuickFilter('int', this.value)" style="display:none;">
+              <option value="all">All dates</option>
+              <option value="month">Launching this month</option>
+            </select>
+            <div class="dd"><button class="btn btn-ghost btn-sm" onclick="toggleDD('int-filter-panel')"><i data-lucide="sliders-horizontal" style="width:14px;height:14px;"></i>Filter<span id="int-filter-count-badge"></span></button><div class="dd-panel left filter-panel" id="int-filter-panel"></div></div>
+          </div>
+          <div class="toolbar-right">
+            <div class="dd">
+              <button class="btn btn-ghost btn-sm" onclick="toggleDD('int-export-panel')"><i data-lucide="download" style="width:14px;height:14px;"></i>Export<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+              <div class="dd-panel left" id="int-export-panel" style="width:210px; padding:6px;">
+                <a class="avatar-menu-item" onclick="exportRoadmapImage('int')"><i data-lucide="image" style="width:15px;height:15px;"></i>Export as Image (PNG)</a>
+                <a class="avatar-menu-item" onclick="exportRoadmapPDF('int')"><i data-lucide="file-text" style="width:15px;height:15px;"></i>Export as PDF</a>
+                <a class="avatar-menu-item" onclick="exportRoadmapStyled('int')"><i data-lucide="route" style="width:15px;height:15px;"></i>Export road-style roadmap</a>
+                <a class="avatar-menu-item" onclick="exportCSV(getFilteredFeatures('int'),'roadmap')"><i data-lucide="table" style="width:15px;height:15px;"></i>Export as CSV</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rm-body">
+          <aside class="module-sidebar" id="int-module-sidebar"></aside>
+          <div class="rm-main">
+            <div id="int-gantt-wrap" class="gantt-wrap">
+              <div class="gantt-scroll">
+                <div class="gantt-fixed"><div class="gantt-head-row">Feature</div><div id="int-gantt-fixed-rows"></div></div>
+                <div class="gantt-timeline"><div class="month-header" id="int-month-header"></div><div id="int-gantt-lane-rows" style="position:relative;"></div></div>
+              </div>
+            </div>
+            <div id="int-list-wrap" class="ftable-wrap" style="display:none;"><table class="ftable"><thead><tr id="int-list-head"></tr></thead><tbody id="int-list-body"></tbody></table></div>
+            <div id="int-kanban-wrap" class="kanban-board" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURE LIST ================= -->
+<section class="view" id="view-features">
+  <div class="app">
+    <aside class="sidebar" id="sidebar-features"></aside>
+    <div class="main"><div class="topbar" id="topbar-features"></div>
+      <div class="content">
+        <div class="page-head">
+          <div><h1>Features</h1></div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-ghost" onclick="exportCSV(getFilteredFeatures(), 'features')"><i data-lucide="download" style="width:14px;height:14px;"></i>Export</button>
+            <button class="btn btn-primary" onclick="openFeatureModal()">+ Add Feature</button>
+          </div>
+        </div>
+        <div class="rm-toolbar">
+          <div class="toolbar-left">
+            <div class="search-box" style="width:220px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="Search features?" oninput="setSearch(this.value)"></div>
+            <div class="product-select dd" id="ft-product-dd">
+              <button onclick="toggleDD('ft-product-panel')"><span class="sw" id="ft-product-sw" style="background:var(--blue);"></span><span id="ft-product-label">All products</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+              <div class="dd-panel left product-select-panel" id="ft-product-panel"></div>
+            </div>
+            <div class="dd"><button class="btn btn-ghost btn-sm" onclick="toggleDD('ft-filter-panel')"><i data-lucide="sliders-horizontal" style="width:14px;height:14px;"></i>Filters<span id="ft-filter-count-badge"></span></button><div class="dd-panel left filter-panel" id="ft-filter-panel"></div></div>
+          </div>
+          <div class="toolbar-right">
+            <div class="seg" id="ft-view-seg">
+              <button class="active" onclick="setBoardView('ft','list')"><i data-lucide="list" style="width:13px;height:13px;"></i>List</button>
+              <button onclick="setBoardView('ft','gantt')"><i data-lucide="bar-chart-2" style="width:13px;height:13px;"></i>Gantt</button>
+              <button onclick="setBoardView('ft','kanban')"><i data-lucide="columns" style="width:13px;height:13px;"></i>Kanban</button>
+            </div>
+            <div class="dd"><button class="btn btn-ghost btn-sm" onclick="toggleDD('col-menu')"><i data-lucide="columns-3" style="width:14px;height:14px;"></i>Columns</button><div class="dd-panel right col-menu" id="col-menu" style="padding:10px; width:200px;"></div></div>
+          </div>
+        </div>
+        <div id="ft-list-wrap" class="ftable-wrap"><table class="ftable"><thead><tr id="ft-list-head"></tr></thead><tbody id="ft-list-body"></tbody></table></div>
+        <div id="ft-gantt-wrap" class="gantt-wrap" style="display:none;">
+          <div class="gantt-scroll">
+            <div class="gantt-fixed"><div class="gantt-head-row">Feature</div><div id="ft-gantt-fixed-rows"></div></div>
+            <div class="gantt-timeline"><div class="month-header" id="ft-month-header"></div><div id="ft-gantt-lane-rows" style="position:relative;"></div></div>
+          </div>
+        </div>
+        <div id="ft-kanban-wrap" class="kanban-board" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRODUCTS ================= -->
+<section class="view" id="view-products">
+  <div class="app">
+    <aside class="sidebar" id="sidebar-products"></aside>
+    <div class="main"><div class="topbar" id="topbar-products"></div>
+      <div class="content">
+        <div class="page-head"><div><h1>Products</h1></div><button class="btn btn-primary" onclick="openProductModal()">+ Create Product</button></div>
+        <div class="product-grid" id="internal-product-grid" style="margin:0; padding:0; max-width:none;"></div>
+        <div class="view-more-row" id="internal-view-more" style="margin:20px 0 0; padding:0;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REPORTS ================= -->
+<section class="view" id="view-reports">
+  <div class="app">
+    <aside class="sidebar" id="sidebar-reports"></aside>
+    <div class="main"><div class="topbar" id="topbar-reports"></div>
+      <div class="content">
+        <div class="page-head"><div><h1>Reports</h1><p>Release velocity, completion, team productivity, roadmap health</p></div></div>
+        <div class="grid-2">
+          <div class="panel"><h3>Release velocity (features shipped / month)</h3><div class="bars" id="velocity-chart"></div></div>
+          <div class="panel"><h3>Roadmap health</h3>
+            <div class="activity-row"><span style="color:var(--st-released); font-weight:700;">On track</span><span style="margin-left:auto; font-weight:700;">61%</span></div>
+            <div class="activity-row"><span style="color:var(--st-delayed); font-weight:700;">At risk</span><span style="margin-left:auto; font-weight:700;">25%</span></div>
+            <div class="activity-row" style="border-bottom:none;"><span style="color:#EF4444; font-weight:700;">Off track</span><span style="margin-left:auto; font-weight:700;">14%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= USER MANAGEMENT ================= -->
+<section class="view" id="view-users">
+  <div class="app">
+    <aside class="sidebar" id="sidebar-users"></aside>
+    <div class="main"><div class="topbar" id="topbar-users"></div>
+      <div class="content">
+        <div class="page-head"><div><h1>User</h1></div><button class="btn btn-primary" onclick="openUserModal()">+ Invite User</button></div>
+        <div class="ftable-wrap"><table class="ftable user-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="users-table-body"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SETTINGS ================= -->
+<section class="view" id="view-settings">
+  <div class="app">
+    <aside class="sidebar" id="sidebar-settings"></aside>
+    <div class="main"><div class="topbar" id="topbar-settings"></div>
+      <div class="content" style="max-width:600px;">
+        <div class="page-head"><div><h1>Settings</h1></div></div>
+        <div class="panel" style="margin-bottom:16px;">
+          <h3>Brand</h3>
+          <div class="field"><label>Workspace name</label><input id="set-workspace" value="Wragby Product"></div>
+          <div class="field"><label>Brand color</label><input id="set-color" type="color" value="#2E63F6" style="height:42px; padding:4px;"></div>
+          <div class="field"><label>Default roadmap view</label><select id="set-default-view"><option>Gantt</option><option>List</option><option>Kanban</option></select></div>
+          <label class="row" style="display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14px;"><input type="checkbox" id="set-exact-dates"> <b>Show public release date on hover</b> <span style="color:var(--ink-faint); font-weight:400;">— public roadmap only, release date only</span></label>
+        </div>
+        <div class="panel" style="margin-bottom:16px;">
+          <h3>Public roadmap display depth</h3>
+          <p style="font-size:12.5px; color:var(--ink-faint); margin:-8px 0 14px;">Choose exactly which levels end-customers can see on the public roadmap. Select any combination.</p>
+          <label class="row" style="display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14px;"><input type="checkbox" id="depth-modules" checked> <b>Modules</b> <span style="color:var(--ink-faint); font-weight:400;">? group headers only</span></label>
+          <label class="row" style="display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14px;"><input type="checkbox" id="depth-level1" checked> <b>Level 1</b> <span style="color:var(--ink-faint); font-weight:400;">? top-level features</span></label>
+          <label class="row" style="display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14px;"><input type="checkbox" id="depth-level2" checked> <b>Level 2</b> <span style="color:var(--ink-faint); font-weight:400;">? sub-features</span></label>
+          <label class="row" style="display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14px;"><input type="checkbox" id="depth-level3" checked> <b>Level 3</b> <span style="color:var(--ink-faint); font-weight:400;">? nested sub-features</span></label>
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save changes</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sidebar-scrim" id="sidebar-scrim" onclick="closeMobileSidebar()"></div>
+<div class="gantt-tooltip" id="gantt-tooltip"></div>
+<div class="drawer-overlay" id="drawer-overlay"><div class="drawer"><button class="drawer-close icon-btn" onclick="closeDrawer()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button><div id="drawer-body"></div></div></div>
+<div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-box"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================================================================
+   STATE
+================================================================== */
+let session = { loggedIn:false, name:'Dami Adisa', role:'SUPER_ADMIN', initials:'DA' };
+let theme = 'light';
+
+const STATUS_COLORS = { NO_STATUS:'#8C94A8', PLANNED:'#94A3B8', IN_PROGRESS:'#2E63F6', BETA:'#A855F7', RELEASED:'#22C55E', DELAYED:'#F59E0B', POSTPONED:'#F59E0B', CANCELLED:'#EF4444' };
+const STATUS_LABELS = { NO_STATUS:'No Status', PLANNED:'Planned', IN_PROGRESS:'In Progress', BETA:'Beta', RELEASED:'Released', DELAYED:'Delayed', POSTPONED:'Postponed', CANCELLED:'Cancelled' };
+const KANBAN_STATUSES = ['NO_STATUS','PLANNED','IN_PROGRESS','BETA','RELEASED','DELAYED','POSTPONED','CANCELLED'];
+const PRIORITY_META = { 1:{label:'Critical', color:'#EF4444'}, 2:{label:'High', color:'#F59E0B'}, 3:{label:'Medium', color:'#2E63F6'}, 4:{label:'Low', color:'#94A3B8'}, 5:{label:'Backlog', color:'#C7CCD9'} };
+
+let products = [];
+
+let modules = [];
+
+let features = [];
+
+let users = [];
+
+const FEATURE_COLUMNS = [
+  { key:'product', label:'Product', default:true }, { key:'module', label:'Module', default:true },
+  { key:'title', label:'Feature', default:true }, { key:'dates', label:'Dates', default:true },
+  { key:'priority', label:'Priority', default:true }, { key:'status', label:'Status', default:true },
+  { key:'progress', label:'Progress', default:true }, { key:'visibility', label:'Visibility', default:true },
+  { key:'owner', label:'Owner', default:false },
+];
+let activeColumns = new Set(FEATURE_COLUMNS.filter(c=>c.default).map(c=>c.key));
+
+let filters = { statuses: new Set(Object.keys(STATUS_COLORS)), priorities: new Set([1,2,3,4,5]), visibility: new Set(['PUBLIC','PRIVATE']), search:'', dateQuick:{int:'all', ft:'all', pub:'all'} };
+let zoomState = { pub:'month', int:'month', ft:'month' };
+let showExactDates = false;
+let viewingPublic = false; // true while rendering/interacting with the public read-only roadmap
+let productFilter = { pub:'all', int:'all', ft:'all' };
+let moduleFilter = { int:'all', pub:'all' };
+let boardView = { pub:'gantt', int:'gantt', ft:'list' };
+let collapsedModules = new Set();
+let displayDepth = { modules:true, level1:true, level2:true, level3:true };
+let dashFilter = { product:'all', period:'year' };
+let landingExpanded = false, internalProductsExpanded = false;
+
+const ZOOM_WIDTH = { month:220, quarter:130, year:60 };
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun'];
+const YEAR = 2026;
+
+function fmtDate(d){ if(!d) return '?'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function productById(id){ return products.find(p=>p.id===id); }
+function moduleById(id){ return modules.find(m=>m.id===id); }
+function featureById(id){ return features.find(f=>f.id===id); }
+function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,8); }
+function featureDepth(f){ let d=0, cur=f, guard=0; while(cur && cur.parentId && guard<10){ d++; cur = featureById(cur.parentId); guard++; } return d; }
+
+/* ==================================================================
+   THEME
+================================================================== */
+function toggleTheme(){
+  theme = theme==='light' ? 'dark' : 'light';
+  document.body.classList.toggle('dark', theme==='dark');
+  document.querySelectorAll('[id="theme-icon"]').forEach(el=>el.setAttribute('data-lucide', theme==='dark'?'sun':'moon'));
+  lucide.createIcons();
+}
+
+/* ==================================================================
+   NAVIGATION
+================================================================== */
+const INTERNAL_VIEWS = ['dashboard','roadmap','features','products','reports','users','settings'];
+const SIDEBAR_LINKS = [
+  { view:'dashboard', label:'Dashboard', icon:'layout-dashboard' }, { view:'roadmap', label:'Roadmap View', icon:'map' },
+  { view:'products', label:'Products', icon:'package' }, { view:'features', label:'Features', icon:'list' },
+];
+const SIDEBAR_ADMIN_LINKS = [ { view:'users', label:'User Management', icon:'users' }, { view:'settings', label:'Settings', icon:'settings' } ];
+
+function go(view){
+  if(INTERNAL_VIEWS.includes(view) && !session.loggedIn){ go('login'); return; }
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  window.scrollTo(0,0); closeAllDD(); closeMobileSidebar();
+
+  if(view==='dashboard') renderDashboard();
+  if(view==='roadmap') renderBoard('int');
+  if(view==='features') renderBoard('ft');
+  if(view==='products') renderInternalProducts();
+  if(view==='reports') renderReports();
+  if(view==='users') renderUsersTable();
+  if(view==='public-roadmap') renderBoard('pub');
+  if(view==='landing') renderLanding();
+  if(INTERNAL_VIEWS.includes(view)) renderSidebar(view);
+  lucide.createIcons();
+}
+function doLogin(){ session.loggedIn = true; showToast('Welcome back, ' + session.name.split(' ')[0] + '.'); go('dashboard'); }
+function doLogout(){ session.loggedIn = false; closeAllDD(); go('landing'); }
+
+function renderSidebar(activeView){
+  ['dashboard','roadmap','features','products','reports','users','settings'].forEach(v=>{
+    const el = document.getElementById('sidebar-'+v); if(!el) return;
+    let html = `<div class="side-logo logo" style="font-size:18px;" onclick="go('landing')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="pin"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8z" fill="currentColor"/><circle cx="12" cy="10" r="3.2" fill="white"/></svg>Roadimap</div>`;
+    SIDEBAR_LINKS.forEach(i=>{ html += `<a class="side-link ${i.view===activeView?'active':''}" onclick="go('${i.view}')"><i data-lucide="${i.icon}"></i>${i.label}</a>`; });
+    html += `<div class="side-sep"></div>`;
+    SIDEBAR_ADMIN_LINKS.forEach(i=>{ html += `<a class="side-link ${i.view===activeView?'active':''}" onclick="go('${i.view}')"><i data-lucide="${i.icon}"></i>${i.label}</a>`; });
+    html += `<div style="margin-top:auto;"></div><div class="side-sep"></div><a class="side-link" onclick="doLogout()"><i data-lucide="log-out"></i>Logout</a>`;
+    el.innerHTML = html;
+  });
+  buildTopbars(); lucide.createIcons();
+}
+function buildTopbars(){
+  ['dashboard','roadmap','features','products','reports','users','settings'].forEach(v=>{
+    const el = document.getElementById('topbar-'+v); if(!el) return;
+    el.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+        <button class="icon-btn hamburger-btn" onclick="toggleMobileSidebar()"><i data-lucide="menu"></i></button>
+        <div class="search-box"><i data-lucide="search"></i>Search products, features, people?</div>
+      </div>
+      <div class="top-right">
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><i data-lucide="${theme==='dark'?'sun':'moon'}" id="theme-icon"></i></button>
+        <div class="dd"><button class="icon-btn" onclick="toggleDD('notif-panel-${v}')"><i data-lucide="bell"></i><span class="dot-badge"></span></button>
+          <div class="dd-panel right notif-panel" id="notif-panel-${v}">
+            <div class="notif-item"><b>Feature delayed</b><span>Authenticator push routing moved to Delayed ? 1h ago</span></div>
+            <div class="notif-item"><b>New comment</b><span>Chidi commented on Letter of Non-Indebtedness ? 3h ago</span></div>
+            <div class="notif-item"><b>Release shipped</b><span>To Naira conversion flow marked Released ? 1d ago</span></div>
+          </div></div>
+        <div class="workspace-pill"><i data-lucide="briefcase" style="width:14px;height:14px;"></i><span>Wragby Product</span></div>
+        <div class="dd"><div class="avatar" onclick="toggleDD('avatar-panel-${v}')">${session.initials}</div>
+          <div class="dd-panel right avatar-menu" id="avatar-panel-${v}">
+            <div class="who"><b>${session.name}</b><span>${session.role.replace('_',' ')}</span></div>
+            <a onclick="go('settings')"><i data-lucide="settings" style="width:14px;height:14px;"></i>Settings</a>
+            <a onclick="doLogout()"><i data-lucide="log-out" style="width:14px;height:14px;"></i>Logout</a>
+          </div></div>
+      </div>`;
+  });
+  lucide.createIcons();
+}
+
+function toggleDD(id){ const el = document.getElementById(id); if(!el) return; const willOpen = !el.classList.contains('open'); closeAllDD(); if(willOpen) el.classList.add('open'); }
+function closeAllDD(){ document.querySelectorAll('.dd-panel.open').forEach(p=>p.classList.remove('open')); }
+document.addEventListener('click', (e)=>{ if(!e.target.closest('.dd')) closeAllDD(); });
+
+function toggleMobileSidebar(){
+  const activeView = document.querySelector('.view.active'); const sidebar = activeView ? activeView.querySelector('.sidebar') : null; if(!sidebar) return;
+  const willOpen = !sidebar.classList.contains('mobile-open'); closeMobileSidebar();
+  if(willOpen){ sidebar.classList.add('mobile-open'); document.getElementById('sidebar-scrim').classList.add('open'); }
+}
+function closeMobileSidebar(){ document.querySelectorAll('.sidebar').forEach(s=>s.classList.remove('mobile-open')); document.getElementById('sidebar-scrim').classList.remove('open'); }
+
+function showToast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 2600); }
+
+/* ==================================================================
+   PRODUCT GRID RENDERERS (landing + internal), with 8-card cap
+================================================================== */
+function productCardHtml(p, {showPercent, clickFn}){
+  const feats = features.filter(f=>f.productId===p.id);
+  const avg = feats.length ? Math.round(feats.reduce((s,f)=>s+f.progress,0)/feats.length) : 0;
+  return `<div class="product-card" onclick="${clickFn}('${p.id}')">
+    <div class="p-icon" style="background:${p.color}18;"><i data-lucide="${p.icon}" style="width:20px;height:20px;color:${p.color};"></i></div>
+    <h3>${p.name}</h3><p>${p.description}</p>
+    <div class="p-meta"><span class="p-count">${feats.length} features</span>${showPercent?`<span style="color:var(--ink-faint)">${avg}% complete</span>`:''}</div>
+    ${showPercent?`<div class="p-bar"><i style="width:${avg}%; background:${p.color};"></i></div>`:''}
+  </div>`;
+}
+function renderLanding(){
+  const pubProducts = products.filter(p=>p.visibility==='PUBLIC');
+  document.getElementById('public-product-count').textContent = pubProducts.length;
+  const shown = landingExpanded ? pubProducts : pubProducts.slice(0,8);
+  document.getElementById('landing-product-grid').innerHTML = shown.map(p=>productCardHtml(p,{showPercent:false, clickFn:'openPublicRoadmapFor'})).join('');
+  const rest = pubProducts.length - 8;
+  document.getElementById('landing-view-more').innerHTML = rest>0 ? `<button class="btn btn-ghost" onclick="landingExpanded=!landingExpanded; renderLanding();">${landingExpanded?'View less':'View more ('+rest+')'}</button>` : '';
+  lucide.createIcons();
+}
+function openPublicRoadmapFor(productId){ productFilter.pub = productId; go('public-roadmap'); }
+function renderInternalProducts(){
+  const shown = internalProductsExpanded ? products : products.slice(0,8);
+  document.getElementById('internal-product-grid').innerHTML = shown.map(p=>{
+    const feats = features.filter(f=>f.productId===p.id);
+    const avg = feats.length ? Math.round(feats.reduce((s,f)=>s+f.progress,0)/feats.length) : 0;
+    const isPublic = p.visibility==='PUBLIC';
+    return `<div class="product-card" onclick="openPublicRoadmapForInternal('${p.id}')">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div class="p-icon" style="background:${p.color}18;"><i data-lucide="${p.icon}" style="width:20px;height:20px;color:${p.color};"></i></div>
+        <label class="toggle ${isPublic?'on':''}" style="gap:6px;" onclick="event.stopPropagation(); toggleProductVisibility('${p.id}')" title="${isPublic?'Click to make internal-only':'Click to make public'}">
+          <div class="toggle-track"></div><span style="font-size:11px; color:${isPublic?'var(--st-released)':'var(--ink-faint)'};">${isPublic?'Public':'Internal'}</span>
+        </label>
+      </div>
+      <h3>${p.name}</h3><p>${p.description}</p>
+      <div class="p-meta"><span class="p-count">${feats.length} features</span><span style="color:var(--ink-faint)">${avg}% complete</span></div>
+      <div class="p-bar"><i style="width:${avg}%; background:${p.color};"></i></div>
+    </div>`;
+  }).join('');
+  const rest = products.length - 8;
+  document.getElementById('internal-view-more').innerHTML = rest>0 ? `<button class="btn btn-ghost" onclick="internalProductsExpanded=!internalProductsExpanded; renderInternalProducts();">${internalProductsExpanded?'View less':'View more ('+rest+')'}</button>` : '';
+  lucide.createIcons();
+}
+function toggleProductVisibility(id){
+  const p = productById(id); p.visibility = p.visibility==='PUBLIC' ? 'PRIVATE' : 'PUBLIC';
+  renderInternalProducts(); showToast(p.name + (p.visibility==='PUBLIC' ? ' is now public' : ' is now internal-only'));
+}
+function openPublicRoadmapForInternal(productId){ productFilter.int = productId; go('roadmap'); }
+
+/* ==================================================================
+   PRODUCT + MODULE DROPDOWNS
+================================================================== */
+function renderProductDropdown(scope, publicOnly){
+  const list = publicOnly ? products.filter(p=>p.visibility==='PUBLIC') : products;
+  const panel = document.getElementById(scope+'-product-panel'); const current = productFilter[scope];
+  let html = `<div class="opt ${current==='all'?'active':''}" onclick="selectProductFilter('${scope}','all')"><span class="sw" style="background:var(--blue);"></span>All products</div>`;
+  html += list.map(p=>`<div class="opt ${current===p.id?'active':''}" onclick="selectProductFilter('${scope}','${p.id}')"><span class="sw" style="background:${p.color};"></span>${p.name}</div>`).join('');
+  panel.innerHTML = html;
+  document.getElementById(scope+'-product-label').textContent = current==='all' ? 'All products' : productById(current).name;
+  document.getElementById(scope+'-product-sw').style.background = current==='all' ? '#2E63F6' : productById(current).color;
+}
+function selectProductFilter(scope, id){ productFilter[scope]=id; if(moduleFilter[scope]!==undefined) moduleFilter[scope]='all'; closeAllDD(); renderBoard(scope); }
+
+function renderModuleSidebar(scope){
+  const el = document.getElementById(scope+'-module-sidebar'); if(!el) return;
+  const pf = productFilter[scope];
+  const relevantProducts = scope==='pub' ? products.filter(p=>p.visibility==='PUBLIC') : products;
+  const mods = (pf==='all' ? modules.filter(m=>relevantProducts.some(p=>p.id===m.productId)) : modules.filter(m=>m.productId===pf)).filter(m=>m.active!==false);
+  const current = moduleFilter[scope];
+  let html = `<h4>Modules</h4><div class="msi ${current==='all'?'active':''}" onclick="selectModuleFilter('${scope}','all')"><span>All modules</span></div>`;
+  html += mods.map(m=>{
+    const cnt = features.filter(f=>f.moduleId===m.id && (scope!=='pub' || f.visibility==='PUBLIC')).length;
+    const prefix = pf==='all' ? productById(m.productId).name+' ? ' : '';
+    return `<div class="msi ${current===m.id?'active':''}" onclick="selectModuleFilter('${scope}','${m.id}')"><span>${prefix}${m.name}</span><span class="cnt">${cnt}</span></div>`;
+  }).join('');
+  el.innerHTML = html;
+}
+function selectModuleFilter(scope, id){ moduleFilter[scope] = id; renderBoard(scope); }
+
+/* ==================================================================
+   VIEW / ZOOM / EXACT DATE / DATE-QUICK / FILTER controls
+================================================================== */
+function setBoardView(scope, view){
+  boardView[scope] = view;
+  document.querySelectorAll('#'+scope+'-view-seg button').forEach((b,i)=>{
+    const order = scope==='ft' ? ['list','gantt','kanban'] : ['gantt','list','kanban'];
+    b.classList.toggle('active', order[i]===view);
+  });
+  document.getElementById(scope+'-gantt-wrap').style.display = view==='gantt' ? '' : 'none';
+  document.getElementById(scope+'-list-wrap').style.display = view==='list' ? '' : 'none';
+  const kb = document.getElementById(scope+'-kanban-wrap'); if(kb) kb.style.display = view==='kanban' ? 'flex' : 'none';
+  const zoomSeg = document.getElementById(scope+'-zoom-seg'); if(zoomSeg) zoomSeg.style.display = view==='gantt' ? 'flex' : 'none';
+  renderBoard(scope);
+}
+function setZoom(level, scope){
+  zoomState[scope] = level;
+  document.querySelectorAll('#'+scope+'-zoom-seg button').forEach((b,i)=>b.classList.toggle('active', ['month','quarter','year'][i]===level));
+  renderBoard(scope);
+}
+function setDateQuickFilter(scope, val){ filters.dateQuick[scope] = val; renderBoard(scope); }
+
+function renderFilterPanel(panelId){
+  const scope = panelId.split('-')[0];
+  const panel = document.getElementById(panelId);
+  panel.innerHTML = `
+    <h4>Launching</h4>
+    <select onchange="setDateQuickFilter('${scope}', this.value)" style="width:100%; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px; background:var(--surface); color:var(--ink); margin-bottom:14px;">
+      <option value="all" ${filters.dateQuick[scope]!=='month'?'selected':''}>All dates</option>
+      <option value="month" ${filters.dateQuick[scope]==='month'?'selected':''}>This month</option>
+    </select>
+    <h4>Status</h4>${Object.keys(STATUS_LABELS).map(s=>`<label class="row"><input type="checkbox" data-filter-status="${s}" ${filters.statuses.has(s)?'checked':''}> <span style="width:8px;height:8px;border-radius:50%;background:${STATUS_COLORS[s]};display:inline-block;"></span> ${STATUS_LABELS[s]}</label>`).join('')}
+    <h4 style="margin-top:14px;">Priority</h4>${[1,2,3,4,5].map(p=>`<label class="row"><input type="checkbox" data-filter-priority="${p}" ${filters.priorities.has(p)?'checked':''}> P${p} ${PRIORITY_META[p].label}</label>`).join('')}
+    <h4 style="margin-top:14px;">Visibility</h4>
+    <label class="row"><input type="checkbox" data-filter-visibility="PUBLIC" ${filters.visibility.has('PUBLIC')?'checked':''}> Public</label>
+    <label class="row"><input type="checkbox" data-filter-visibility="PRIVATE" ${filters.visibility.has('PRIVATE')?'checked':''}> Internal</label>
+    <div class="filter-actions"><button class="btn btn-ghost btn-sm" style="flex:1;" onclick="clearFilters('${panelId}')">Reset to default</button><button class="btn btn-primary btn-sm" style="flex:1;" onclick="applyFilters('${panelId}')">Apply</button></div>`;
+}
+function applyFilters(panelId){
+  const scope = panelId.split('-')[0];
+  const panel = document.getElementById(panelId);
+  filters.statuses = new Set([...panel.querySelectorAll('[data-filter-status]:checked')].map(el=>el.dataset.filterStatus));
+  filters.priorities = new Set([...panel.querySelectorAll('[data-filter-priority]:checked')].map(el=>+el.dataset.filterPriority));
+  filters.visibility = new Set([...panel.querySelectorAll('[data-filter-visibility]:checked')].map(el=>el.dataset.filterVisibility));
+  closeAllDD(); updateFilterBadges(); renderBoard('int'); renderBoard('ft'); renderBoard('pub'); showToast('Filters applied');
+}
+function clearFilters(panelId){
+  const scope = panelId.split('-')[0];
+  filters.statuses = new Set(Object.keys(STATUS_LABELS)); filters.priorities = new Set([1,2,3,4,5]); filters.visibility = new Set(['PUBLIC','PRIVATE']); filters.dateQuick[scope]='all';
+  renderFilterPanel(panelId); updateFilterBadges(); renderBoard('int'); renderBoard('ft'); renderBoard('pub'); showToast('Filters reset');
+}
+function updateFilterBadges(){
+  const total = Object.keys(STATUS_LABELS).length + 5 + 2; const active = filters.statuses.size + filters.priorities.size + filters.visibility.size;
+  const label = active < total ? ` (${active})` : '';
+  ['int','ft','pub'].forEach(s=>{ const el = document.getElementById(s+'-filter-count-badge'); if(el) el.textContent = label; });
+}
+function setSearch(val){ filters.search = val.toLowerCase(); renderBoard('ft'); }
+
+/* ==================================================================
+   DATA HELPERS
+================================================================== */
+function isInThisMonth(f){
+  const now = new Date(); const check = d => d && new Date(d).getMonth()===now.getMonth() && new Date(d).getFullYear()===now.getFullYear();
+  return check(f.startDate) || check(f.endDate);
+}
+function getAllFeatures(){ return features.map(f=>({...f, product: productById(f.productId)?.name || '?', module: moduleById(f.moduleId)?.name || '?'})); }
+function getFilteredFeatures(scope){
+  let list = getAllFeatures().filter(f=> filters.statuses.has(f.status) && filters.priorities.has(f.priority) && (filters.search==='' || f.title.toLowerCase().includes(filters.search)));
+  if(scope!=='pub') list = list.filter(f=>filters.visibility.has(f.visibility));
+  if(scope && filters.dateQuick[scope]==='month') list = list.filter(isInThisMonth);
+  return list;
+}
+function buildTree(list){
+  const byId = {}; list.forEach(f=>{ byId[f.id] = {...f, _children:[]}; });
+  const roots = [];
+  list.forEach(f=>{ if(f.parentId && byId[f.parentId]) byId[f.parentId]._children.push(byId[f.id]); else roots.push(byId[f.id]); });
+  return roots;
+}
+function flattenTree(roots, depth){
+  depth = depth||0; let out = [];
+  roots.forEach(f=>{ out.push({...f, _depth:depth}); if(f._children && f._children.length) out.push(...flattenTree(f._children, depth+1)); });
+  return out;
+}
+function applyDepthLimit(rows, publicOnly){
+  if(!publicOnly) return rows;
+  // _depth 0 => Level 1, 1 => Level 2, 2 => Level 3, etc.
+  const allowed = [];
+  if(displayDepth.level1) allowed.push(0);
+  if(displayDepth.level2) allowed.push(1);
+  if(displayDepth.level3) allowed.push(2);
+  return rows.filter(r=>allowed.includes(r._depth) || r._depth>2 && displayDepth.level3);
+}
+function getBoardGroups(scope, publicOnly){
+  let list = getFilteredFeatures(scope);
+  if(publicOnly) list = list.filter(f=>f.visibility==='PUBLIC');
+  if(productFilter[scope] && productFilter[scope]!=='all') list = list.filter(f=>f.productId===productFilter[scope]);
+  if(moduleFilter[scope] && moduleFilter[scope]!=='all') list = list.filter(f=>f.moduleId===moduleFilter[scope]);
+  const relevantProducts = (publicOnly ? products.filter(p=>p.visibility==='PUBLIC') : products).filter(p=>!productFilter[scope]||productFilter[scope]==='all'||p.id===productFilter[scope]);
+
+  return relevantProducts.map(p=>{
+    const prodFeatures = list.filter(f=>f.productId===p.id);
+    // Public + "Modules" unchecked: show all features flat, no module headers.
+    if(publicOnly && !displayDepth.modules){
+      const rows = applyDepthLimit(flattenTree(buildTree(prodFeatures)), publicOnly);
+      return { product:p, modGroups: rows.length ? [{module:null, rows}] : [] };
+    }
+    const modIds = [...new Set(prodFeatures.map(f=>f.moduleId).filter(Boolean))];
+    const modGroups = modules.filter(m=>m.productId===p.id && modIds.includes(m.id)).map(m=>({
+      module:m, rows: applyDepthLimit(flattenTree(buildTree(prodFeatures.filter(f=>f.moduleId===m.id))), publicOnly)
+    })).filter(g=>g.rows.length>0);
+    const noMod = prodFeatures.filter(f=>!f.moduleId);
+    if(noMod.length){ const rows = applyDepthLimit(flattenTree(buildTree(noMod)), publicOnly); if(rows.length) modGroups.push({module:null, rows}); }
+    return { product:p, modGroups };
+  }).filter(g=>g.modGroups.length>0);
+}
+
+/* ==================================================================
+   BOARD ORCHESTRATION ? routes to Gantt / List / Kanban renderer
+================================================================== */
+function renderBoard(scope){
+  const publicOnly = scope==='pub';
+  viewingPublic = publicOnly;
+  renderProductDropdown(scope, publicOnly);
+  if(scope==='int'){ renderFilterPanel(scope+'-filter-panel'); renderModuleSidebar(scope); }
+  if(scope==='pub'){ renderModuleSidebar(scope); }
+  if(scope==='ft'){ renderFilterPanel('ft-filter-panel'); buildColMenu(); }
+  updateFilterBadges();
+  const view = boardView[scope];
+  if(view==='gantt') renderGanttView(scope, publicOnly);
+  else if(view==='list') renderListView(scope, publicOnly);
+  else if(view==='kanban') renderKanbanView(scope, publicOnly);
+}
+
+/* ---------- GANTT ---------- */
+function monthOffset(dateStr){ if(!dateStr) return 0; const d = new Date(dateStr); return d.getMonth() + d.getDate()/30; }
+function renderGanttView(scope, publicOnly){
+  const width = ZOOM_WIDTH[zoomState[scope]];
+  const groups = getBoardGroups(scope, publicOnly);
+  const totalWidth = MONTHS.length * width;
+  const fixedEl = document.getElementById(scope+'-gantt-fixed-rows'); const headEl = document.getElementById(scope+'-month-header'); const laneEl = document.getElementById(scope+'-gantt-lane-rows');
+  if(!fixedEl) return;
+
+  if(groups.length===0){ fixedEl.innerHTML=''; headEl.innerHTML=''; laneEl.innerHTML = `<div class="empty-state">No features match the current filters.</div>`; return; }
+
+  let fixedHtml='', laneHtml='', rowCount=0;
+  groups.forEach(g=>{
+    fixedHtml += `<div class="grp-head"><i data-lucide="folder" style="width:13px;height:13px;"></i>${g.product.name}</div>`;
+    laneHtml += `<div class="grp-spacer" style="width:${totalWidth}px;"></div>`;
+    g.modGroups.forEach(mg=>{
+      const modId = mg.module ? mg.module.id : 'none_'+g.product.id;
+      const collapsed = !publicOnly && collapsedModules.has(modId);
+      if(mg.module){
+        const chev = publicOnly ? '' : `<i data-lucide="chevron-down" class="chev" style="width:12px;height:12px;"></i>`;
+        const clickAttr = publicOnly ? '' : `onclick="toggleModuleCollapse('${modId}','${scope}')"`;
+        fixedHtml += `<div class="mod-head ${collapsed?'collapsed':''}" ${clickAttr} style="${publicOnly?'cursor:default;':''}">${chev}${mg.module.name} <span style="margin-left:auto; color:var(--ink-faint);">${mg.rows.length}</span></div>`;
+        laneHtml += `<div class="mod-spacer" style="width:${totalWidth}px;"></div>`;
+      }
+      if(collapsed) return;
+      mg.rows.forEach(f=>{
+        const isSub = f._depth>0;
+        const indent = 16 + f._depth*18;
+        let leftMarker;
+        const addSub = (!isSub && !publicOnly) ? `<span class="add-sub-btn" onclick='event.stopPropagation(); openFeatureModal(${JSON.stringify({parentId:f.id, productId:f.productId, moduleId:f.moduleId}).replace(/'/g,"&apos;")})' title="Add sub-feature">+</span>` : '';
+        if(!isSub && !publicOnly) leftMarker = `<span style="width:17px;flex-shrink:0;"></span>`;
+        else if(isSub) leftMarker = `<i data-lucide="corner-down-right" style="width:12px;height:12px;color:var(--ink-faint); flex-shrink:0;"></i>`;
+        else leftMarker = `<span style="width:17px;flex-shrink:0;"></span>`;
+        fixedHtml += `<div class="feat-row" style="padding-left:${indent}px;">
+          ${leftMarker}
+          <span class="fdot" style="background:${STATUS_COLORS[f.status]}; width:${isSub?'6px':'8px'}; height:${isSub?'6px':'8px'};"></span>
+          <span class="fname" style="${isSub?'font-weight:500;font-size:12.3px;color:var(--ink-soft);':''}">${f.title}</span>
+          ${addSub}
+          <span class="prio-badge" style="background:${PRIORITY_META[f.priority].color}22; color:${PRIORITY_META[f.priority].color};" title="Priority: ${PRIORITY_META[f.priority].label}">P${f.priority}</span></div>`;
+        const left = monthOffset(f.startDate)*width + 14;
+        const barWidth = Math.max(monthOffset(f.endDate)*width - left, 40);
+        const label = publicOnly ? f.title : `${f.title} · ${f.progress}%`;
+        const flagIcon = f.status==='RELEASED' ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>` : '';
+        const flagLeft = left + barWidth + 8;
+        const flag = `<div class="bar-flag" style="left:${flagLeft}px; background:${STATUS_COLORS[f.status]}18; color:${STATUS_COLORS[f.status]};">${STATUS_LABELS[f.status]}${flagIcon}</div>`;
+        laneHtml += `<div class="lane-row" style="width:${totalWidth}px;"><div class="bar" style="left:${left}px; width:${barWidth}px; background:${STATUS_COLORS[f.status]}; ${isSub?'opacity:.85; top:14px; height:24px;':''}"
+          onclick='openDrawer(${JSON.stringify(f).replace(/'/g,"&apos;")})' onmouseenter='showTip(event, ${JSON.stringify(f).replace(/'/g,"&apos;")})' onmousemove='moveTip(event)' onmouseleave='hideTip()'>
+          <div class="fill" style="width:${f.progress}%;"></div><span>${label}</span></div>${flag}</div>`;
+        rowCount++;
+      });
+    });
+  });
+  fixedEl.innerHTML = fixedHtml;
+  headEl.innerHTML = MONTHS.map(m=>`<div class="month-cell" style="width:${width}px;">${m} ${YEAR}</div>`).join('');
+  const todayLeft = monthOffset('2026-07-10') * width;
+  laneEl.innerHTML = laneHtml + `<div class="today-line" style="left:${todayLeft}px; height:${(rowCount + groups.reduce((s,g)=>s+g.modGroups.length,0))*52}px;"></div>`;
+  lucide.createIcons();
+}
+function toggleModuleCollapse(modId, scope){ collapsedModules.has(modId) ? collapsedModules.delete(modId) : collapsedModules.add(modId); renderGanttView(scope||'int', (scope||'int')==='pub'); }
+
+/* ---------- LIST ---------- */
+function renderListView(scope, publicOnly){
+  const headEl = document.getElementById(scope+'-list-head'); const bodyEl = document.getElementById(scope+'-list-body');
+  if(!headEl) return;
+  const cols = scope==='ft' ? FEATURE_COLUMNS.filter(c=>activeColumns.has(c.key)) : FEATURE_COLUMNS.filter(c=>c.key!=='visibility');
+  headEl.innerHTML = cols.map(c=>`<th>${c.label}</th>`).join('') + `<th></th>`;
+  const groups = getBoardGroups(scope, publicOnly);
+  if(groups.length===0){ bodyEl.innerHTML = `<tr><td colspan="${cols.length+1}"><div class="empty-state">No features match your filters.</div></td></tr>`; return; }
+
+  let rowsHtml = '';
+  groups.forEach(g=>{
+    g.modGroups.forEach(mg=>{
+      mg.rows.forEach(f=>{
+        rowsHtml += `<tr onclick='openDrawer(${JSON.stringify(f).replace(/'/g,"&apos;")})'>`;
+        cols.forEach(c=>{ rowsHtml += `<td>${listCell(f, c.key, g.product, mg.module)}</td>`; });
+        rowsHtml += `<td>${f._depth===0 && !publicOnly ? `<span class="add-sub-btn" onclick='event.stopPropagation(); openFeatureModal(${JSON.stringify({parentId:f.id, productId:f.productId, moduleId:f.moduleId}).replace(/'/g,"&apos;")})' title="Add sub-feature">+</span>` : ''}</td></tr>`;
+      });
+    });
+  });
+  bodyEl.innerHTML = rowsHtml;
+  lucide.createIcons();
+}
+function listCell(f, key, product, module){
+  if(key==='product') return product ? product.name : '?';
+  if(key==='module') return module ? module.name : '?';
+  if(key==='title'){
+    const isSub = f._depth>0;
+    const marker = isSub ? `<i data-lucide="corner-down-right" style="width:12px;height:12px;color:var(--ink-faint); flex-shrink:0;"></i>` : `<span class="fdot" style="background:${STATUS_COLORS[f.status]};"></span>`;
+    return `<div style="display:flex; align-items:center; gap:8px; padding-left:${f._depth*20}px;">${marker}<span style="${isSub?'font-weight:500;font-size:12.5px;color:var(--ink-soft);':'font-weight:700;'}">${f.title}</span></div>`;
+  }
+  if(key==='dates') return `${fmtDate(f.startDate)} ? ${fmtDate(f.endDate)}`;
+  if(key==='status') return `<span class="status-badge" style="background:${STATUS_COLORS[f.status]}22; color:${STATUS_COLORS[f.status]};"><span class="dot" style="background:${STATUS_COLORS[f.status]};"></span>${STATUS_LABELS[f.status]}</span>`;
+  if(key==='priority') return `<span class="prio-badge" style="background:${PRIORITY_META[f.priority].color}22; color:${PRIORITY_META[f.priority].color}; padding:3px 8px; font-size:11.5px;">P${f.priority} ? ${PRIORITY_META[f.priority].label}</span>`;
+  if(key==='progress') return `<span class="mini-bar-bg"><span class="mini-bar-fg" style="width:${f.progress}%; background:${STATUS_COLORS[f.status]}; display:block;"></span></span>${viewingPublic ? '' : f.progress+'%'}`;
+  if(key==='visibility') return f.visibility==='PUBLIC'?'Public':'Internal';
+  if(key==='owner') return f.owner||'?';
+  return f[key] ?? '?';
+}
+function buildColMenu(){ const el = document.getElementById('col-menu'); if(!el) return; el.innerHTML = FEATURE_COLUMNS.map(c=>`<label><input type="checkbox" ${activeColumns.has(c.key)?'checked':''} onchange="toggleColumn('${c.key}')">${c.label}</label>`).join(''); }
+function toggleColumn(key){ activeColumns.has(key) ? activeColumns.delete(key) : activeColumns.add(key); renderBoard('ft'); }
+
+/* ---------- KANBAN ---------- */
+function renderKanbanView(scope, publicOnly){
+  const el = document.getElementById(scope+'-kanban-wrap'); if(!el) return;
+  const groups = getBoardGroups(scope, publicOnly);
+  const allRows = groups.flatMap(g=>g.modGroups.flatMap(mg=>mg.rows.map(f=>({...f, _product:g.product, _module:mg.module}))));
+  el.innerHTML = KANBAN_STATUSES.map(status=>{
+    const items = allRows.filter(f=>f.status===status);
+    return `<div class="kanban-col">
+      <div class="kanban-col-head"><span class="sw" style="background:${STATUS_COLORS[status]};"></span>${STATUS_LABELS[status]}<span class="cnt">${items.length}</span></div>
+      ${items.map(f=>`<div class="kanban-card" style="${f._depth>0?'margin-left:14px; border-left:2px solid var(--border); border-top-left-radius:2px; border-bottom-left-radius:2px;':''}" onclick='openDrawer(${JSON.stringify(f).replace(/'/g,"&apos;")})'>
+        <div class="kt">${f._depth>0?'<i data-lucide="corner-down-right" style="width:11px;height:11px;color:var(--ink-faint); vertical-align:-1px; margin-right:4px;"></i>':''}${f.title}</div>
+        <div class="km">${f._product.name}${f._module?' ? '+f._module.name:''}</div>
+        <div class="kf"><span class="prio-badge" style="background:${PRIORITY_META[f.priority].color}22; color:${PRIORITY_META[f.priority].color};">P${f.priority}</span>${viewingPublic ? `<span class="mini-bar-bg" style="width:50px;"><span class="mini-bar-fg" style="width:${f.progress}%; background:${STATUS_COLORS[f.status]}; display:block;"></span></span>` : `<span style="font-size:11px; color:var(--ink-faint); font-weight:700;">${f.progress}%</span>`}</div>
+      </div>`).join('') || `<div style="font-size:12px; color:var(--ink-faint); padding:10px 4px;">No features</div>`}
+    </div>`;
+  }).join('');
+  lucide.createIcons();
+}
+
+/* ==================================================================
+   TOOLTIP + DRAWER
+================================================================== */
+function showTip(e, f){
+  const tip = document.getElementById('gantt-tooltip');
+  const dateLine = viewingPublic ? (showExactDates ? `<span class="tt-range">Release date: ${fmtDate(f.endDate)}</span><br>` : '') : `<span class="tt-range">${fmtDate(f.startDate)} - ${fmtDate(f.endDate)}</span><br>`;
+  tip.innerHTML = `<b>${f.title}</b>${dateLine}<span class="tt-range">${STATUS_LABELS[f.status]} · Priority P${f.priority} (${PRIORITY_META[f.priority].label})${viewingPublic ? '' : ' · '+f.progress+'% complete'}</span>`;
+  tip.style.opacity = 1; moveTip(e);
+}
+function moveTip(e){ const tip = document.getElementById('gantt-tooltip'); tip.style.left = (e.clientX+16)+'px'; tip.style.top = (e.clientY+16)+'px'; }
+function hideTip(){ document.getElementById('gantt-tooltip').style.opacity = 0; }
+
+function openDrawer(f){
+  const p = productById(f.productId); const m = moduleById(f.moduleId); const parent = f.parentId ? featureById(f.parentId) : null;
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="status-badge" style="background:${STATUS_COLORS[f.status]}22; color:${STATUS_COLORS[f.status]};"><span class="dot" style="background:${STATUS_COLORS[f.status]};"></span>${STATUS_LABELS[f.status]}</div>
+    <h2>${f.title}</h2>
+    <div class="sub">${p?p.name:''}${m?' ? '+m.name:''}${parent?' ? Sub-feature of '+parent.title:''}</div>
+    ${f.description ? `<div class="drawer-field"><label>Description</label><div class="value" style="font-weight:400; line-height:1.55; color:var(--ink-soft);">${f.description}</div></div>` : ''}
+    <div class="drawer-field"><label>Date range</label><div class="value">${fmtDate(f.startDate)} ? ${fmtDate(f.endDate)}</div></div>
+    ${f.status==='POSTPONED' && f.relaunchDate ? `<div class="drawer-field"><label>Postponed ? new launch date</label><div class="value" style="color:var(--st-delayed);">${fmtDate(f.relaunchDate)}</div></div>` : ''}
+    <div class="drawer-field"><label>Progress</label>${viewingPublic ? '' : `<div class="value">${f.progress}%</div>`}<div class="drawer-progress-bg"><div class="drawer-progress-fg" style="width:${f.progress}%; background:${STATUS_COLORS[f.status]};"></div></div></div>
+    <div class="drawer-field"><label>Owner</label><div class="value">${f.owner}</div></div>
+    <div class="drawer-field"><label>Priority</label><div class="value"><span class="prio-badge" style="background:${PRIORITY_META[f.priority].color}22; color:${PRIORITY_META[f.priority].color}; padding:3px 8px; font-size:11.5px;">P${f.priority} ? ${PRIORITY_META[f.priority].label}</span></div></div>
+    <div class="drawer-field"><label>Visibility</label><div class="value">${f.visibility==='PUBLIC'?'Public':'Internal'}</div></div>
+    ${(!viewingPublic && session.loggedIn) ? `<button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;" onclick="closeDrawer(); openFeatureModal({id:'${f.id}'})"><i data-lucide="pencil" style="width:14px;height:14px;"></i>Edit feature</button>` : ''}`;
+  document.getElementById('drawer-overlay').classList.add('open');
+  lucide.createIcons();
+}
+function closeDrawer(){ document.getElementById('drawer-overlay').classList.remove('open'); }
+document.getElementById('drawer-overlay').addEventListener('click', e=>{ if(e.target.id==='drawer-overlay') closeDrawer(); });
+
+/* ==================================================================
+   CSV EXPORT
+================================================================== */
+/* ==================================================================
+   ROADMAP EXPORT ? image (PNG), PDF, and a print-styled "road" roadmap
+================================================================== */
+function exportTargetEl(scope){
+  // The gantt wrapper for the given scope is what we snapshot.
+  return document.getElementById(scope+'-gantt-wrap');
+}
+async function exportRoadmapImage(scope){
+  closeAllDD(); showToast('Rendering image?');
+  const el = exportTargetEl(scope);
+  if(!el || !window.html2canvas){ showToast('Export unavailable'); return; }
+  const canvas = await html2canvas(el, { backgroundColor: getComputedStyle(document.body).getPropertyValue('--surface') || '#fff', scale:2 });
+  const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = 'roadmap.png'; a.click();
+  showToast('Roadmap exported as PNG');
+}
+async function exportRoadmapPDF(scope){
+  closeAllDD(); showToast('Building PDF?');
+  const el = exportTargetEl(scope);
+  if(!el || !window.html2canvas || !window.jspdf){ showToast('Export unavailable'); return; }
+  const canvas = await html2canvas(el, { backgroundColor:'#ffffff', scale:2 });
+  const img = canvas.toDataURL('image/png');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
+  const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+  const ratio = Math.min(pw/canvas.width, (ph-60)/canvas.height);
+  pdf.setFontSize(16); pdf.text('Wragby Product Roadmap', 24, 30);
+  pdf.addImage(img, 'PNG', 24, 44, canvas.width*ratio, canvas.height*ratio);
+  pdf.save('roadmap.pdf');
+  showToast('Roadmap exported as PDF');
+}
+// A print-friendly "road style" roadmap: quarters as lanes, features as
+// milestone chips ? the marketing-style artwork, not the Gantt grid.
+async function exportRoadmapStyled(scope){
+  closeAllDD(); showToast('Designing roadmap?');
+  const publicOnly = scope==='pub';
+  const groups = getBoardGroups(scope, publicOnly);
+  const quarters = ['Q1 2026','Q2 2026','Q3 2026','Q4 2026'];
+  const qOf = d => d ? 'Q'+(Math.floor(new Date(d).getMonth()/3)+1)+' 2026' : 'Q1 2026';
+  const allRows = groups.flatMap(g=>g.modGroups.flatMap(mg=>mg.rows.filter(r=>r._depth===0).map(f=>({...f, _pcolor:g.product.color, _pname:g.product.name}))));
+
+  const stage = document.createElement('div');
+  stage.style.cssText = 'position:fixed; left:-9999px; top:0; width:1200px; background:#fff; padding:40px; font-family:Inter,sans-serif;';
+  stage.innerHTML = `
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8z" fill="#2E63F6"/><circle cx="12" cy="10" r="3.2" fill="white"/></svg>
+      <span style="font-size:24px; font-weight:800; color:#0B1220;">Wragby Product Roadmap</span>
+    </div>
+    <div style="color:#8C94A8; font-size:13px; margin-bottom:28px;">${scope==='pub'?'Public roadmap':'Internal roadmap'} ? 2026</div>
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+      ${quarters.map((q,qi)=>{
+        const items = allRows.filter(f=>qOf(f.endDate)===q);
+        const laneColor = ['#2E63F6','#22C55E','#F59E0B','#A855F7'][qi];
+        return `<div>
+          <div style="background:${laneColor}; color:#fff; font-weight:800; font-size:14px; padding:10px 14px; border-radius:10px 10px 0 0;">${q}</div>
+          <div style="background:${laneColor}0d; border:1px solid ${laneColor}33; border-top:none; border-radius:0 0 10px 10px; padding:12px; min-height:220px;">
+            ${items.map(f=>`<div style="background:#fff; border:1px solid #E7EAF2; border-left:3px solid ${f._pcolor}; border-radius:8px; padding:9px 11px; margin-bottom:9px; box-shadow:0 1px 2px rgba(11,18,32,.04);">
+              <div style="font-size:12.5px; font-weight:700; color:#0B1220;">${f.title}</div>
+              <div style="font-size:10.5px; color:#8C94A8; margin-top:3px;">${f._pname} ? ${STATUS_LABELS[f.status]}</div>
+            </div>`).join('') || `<div style="font-size:11px; color:#B9C0D4; padding:8px;">No launches</div>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:24px; font-size:11px; color:#B9C0D4;">Generated ${new Date().toLocaleDateString()} ? Roadimap</div>`;
+  document.body.appendChild(stage);
+  const canvas = await html2canvas(stage, { backgroundColor:'#ffffff', scale:2 });
+  document.body.removeChild(stage);
+  const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = 'roadmap-styled.png'; a.click();
+  showToast('Road-style roadmap exported');
+}
+
+function exportCSV(rows, filename){
+  if(!rows.length){ showToast('Nothing to export'); return; }
+  const cols = ['product','module','title','owner','status','priority','progress','startDate','endDate','visibility'];
+  const csv = [cols.join(',')].concat(rows.map(r=>cols.map(c=>`"${(r[c]??'').toString().replace(/"/g,'""')}"`).join(','))).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename+'.csv'; a.click(); URL.revokeObjectURL(url);
+  showToast('Exported ' + rows.length + ' rows to CSV');
+}
+
+/* ==================================================================
+   MODALS
+================================================================== */
+function openModal(html){ document.getElementById('modal-box').innerHTML = html; document.getElementById('modal-overlay').classList.add('open'); lucide.createIcons(); }
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
+document.getElementById('modal-overlay').addEventListener('click', e=>{ if(e.target.id==='modal-overlay') closeModal(); });
+
+function moduleOptionsFor(productId){ return modules.filter(m=>m.productId===productId).map(m=>`<option value="${m.id}">${m.name}</option>`).join(''); }
+function parentFeatureOptions(productId, moduleId, currentParentId, editId){
+  const list = features.filter(f=>!f.parentId && f.id!==editId && (!productId || f.productId===productId) && (!moduleId || f.moduleId===moduleId));
+  return `<option value="">No parent — create top-level feature</option>` + list.map(f=>`<option value="${f.id}" ${currentParentId===f.id?'selected':''}>${productById(f.productId)?.name || 'Product'} / ${moduleById(f.moduleId)?.name || 'No module'} — ${f.title}</option>`).join('');
+}
+function syncParentFeatureOptions(){
+  const parentSelect = document.getElementById('nf-parent-select'); if(!parentSelect) return;
+  const productId = document.getElementById('nf-product').value;
+  const moduleId = document.getElementById('nf-module').value;
+  const current = parentSelect.value || document.getElementById('nf-parent').value;
+  const editId = document.getElementById('nf-edit-id').value;
+  parentSelect.innerHTML = parentFeatureOptions(productId, moduleId, current, editId);
+  document.getElementById('nf-parent').value = parentSelect.value;
+}
+function onFeatureProductChange(){
+  document.getElementById('nf-module').innerHTML = `<option value="">No module</option>` + moduleOptionsFor(document.getElementById('nf-product').value);
+  syncParentFeatureOptions();
+}
+function onFeatureModuleChange(){ syncParentFeatureOptions(); }
+function onParentFeatureChange(){
+  const parentId = document.getElementById('nf-parent-select').value;
+  document.getElementById('nf-parent').value = parentId;
+  if(!parentId) return;
+  const parent = featureById(parentId); if(!parent) return;
+  document.getElementById('nf-product').value = parent.productId;
+  document.getElementById('nf-module').innerHTML = `<option value="">No module</option>` + moduleOptionsFor(parent.productId);
+  document.getElementById('nf-module').value = parent.moduleId || '';
+}
+
+function openFeatureModal(prefill){
+  prefill = prefill || {};
+  const editing = !!prefill.id && !!featureById(prefill.id);
+  const f = editing ? featureById(prefill.id) : null;
+  const isSub = editing ? !!f.parentId : !!prefill.parentId;
+  const parent = isSub ? featureById(editing ? f.parentId : prefill.parentId) : null;
+  const cur = editing ? f : {
+    productId: prefill.productId || products[0].id, moduleId: prefill.moduleId || '', parentId: prefill.parentId || '',
+    title:'', description:'', status:'NO_STATUS', priority:3, progress:0, startDate:'2026-02-01', endDate:'2026-03-15', relaunchDate:'', owner:'', visibility:'PRIVATE'
+  };
+  openModal(`
+    <button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2>${editing ? 'Edit feature' : (isSub ? 'Add sub-feature' : 'Add feature')}</h2><div class="sub">${isSub && parent ? 'Nested under <b>'+parent.title+'</b>' : 'Creates a real row in the Gantt, List and Kanban views.'}</div>
+    <input type="hidden" id="nf-parent" value="${editing ? (f.parentId||'') : (prefill.parentId||'')}">
+    <input type="hidden" id="nf-edit-id" value="${editing ? f.id : ''}">
+    <div class="field"><label>Product</label><select id="nf-product" onchange="onFeatureProductChange()" ${(isSub||editing)?'disabled':''}>${products.map(p=>`<option value="${p.id}" ${cur.productId===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Module</label><select id="nf-module" onchange="onFeatureModuleChange()" ${(isSub||editing)?'disabled':''}><option value="">No module</option>${moduleOptionsFor(cur.productId)}</select></div>
+    ${!editing ? `<div class="field"><label>Sub-feature parent</label><select id="nf-parent-select" onchange="onParentFeatureChange()">${parentFeatureOptions(cur.productId, cur.moduleId, cur.parentId, '')}</select><div style="font-size:12px;color:var(--ink-faint);margin-top:6px;">Choose the feature this should sit under, or leave as top-level.</div></div>` : ''}
+    <div class="field"><label>Title</label><input id="nf-title" placeholder="e.g. Push notification preferences" value="${(cur.title||'').replace(/"/g,'&quot;')}"></div>
+    <div class="field"><label>Description</label><textarea id="nf-description" rows="3" placeholder="What is this feature, and what does it deliver?">${cur.description||''}</textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Status</label><select id="nf-status" onchange="onFeatureStatusChange()">${Object.keys(STATUS_LABELS).map(s=>`<option value="${s}" ${cur.status===s?'selected':''}>${STATUS_LABELS[s]}</option>`).join('')}</select></div>
+      <div class="field"><label>Priority</label><select id="nf-priority">${[1,2,3,4,5].map(p=>`<option value="${p}" ${cur.priority===p?'selected':''}>P${p} ${PRIORITY_META[p].label}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>Progress ? <span id="nf-progress-val">${cur.progress}</span>%</label><input id="nf-progress" type="range" min="0" max="100" step="5" value="${cur.progress}" oninput="document.getElementById('nf-progress-val').textContent=this.value" style="width:100%;"></div>
+    <div class="field-row">
+      <div class="field"><label>Start date</label><input id="nf-start" type="date" value="${cur.startDate||''}"></div>
+      <div class="field"><label>End date</label><input id="nf-end" type="date" value="${cur.endDate||''}"></div>
+    </div>
+    <div class="field" id="nf-relaunch-wrap" style="display:${cur.status==='POSTPONED'?'block':'none'};"><label>New launch date (postponed to)</label><input id="nf-relaunch" type="date" value="${cur.relaunchDate||''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Owner</label><input id="nf-owner" placeholder="e.g. Dami A." value="${(cur.owner||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Visibility</label><select id="nf-visibility"><option value="PRIVATE" ${cur.visibility==='PRIVATE'?'selected':''}>Internal</option><option value="PUBLIC" ${cur.visibility==='PUBLIC'?'selected':''}>Public</option></select></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitFeature()">${editing ? 'Save changes' : 'Create feature'}</button></div>
+  `);
+  document.getElementById('nf-module').value = cur.moduleId || '';
+}
+function onFeatureStatusChange(){
+  const status = document.getElementById('nf-status').value;
+  document.getElementById('nf-relaunch-wrap').style.display = status==='POSTPONED' ? 'block' : 'none';
+  // Auto-fill progress to 100 when marking released, but leave user free to change it.
+  if(status==='RELEASED'){ document.getElementById('nf-progress').value = 100; document.getElementById('nf-progress-val').textContent = '100'; }
+}
+function submitFeature(){
+  const title = document.getElementById('nf-title').value.trim();
+  if(!title){ showToast('Give the feature a title first'); return; }
+  const editId = document.getElementById('nf-edit-id').value;
+  const status = document.getElementById('nf-status').value;
+  const parentSelect = document.getElementById('nf-parent-select');
+  const selectedParentId = parentSelect ? parentSelect.value : document.getElementById('nf-parent').value;
+  if(selectedParentId){
+    const parent = featureById(selectedParentId);
+    if(parent){
+      document.getElementById('nf-product').value = parent.productId;
+      document.getElementById('nf-module').value = parent.moduleId || '';
+    }
+  }
+  const data = {
+    productId: document.getElementById('nf-product').value,
+    moduleId: document.getElementById('nf-module').value || null,
+    parentId: selectedParentId || null,
+    title, description: document.getElementById('nf-description').value.trim(),
+    status, progress: +document.getElementById('nf-progress').value,
+    priority: +document.getElementById('nf-priority').value,
+    startDate: document.getElementById('nf-start').value,
+    endDate: document.getElementById('nf-end').value,
+    relaunchDate: status==='POSTPONED' ? document.getElementById('nf-relaunch').value : '',
+    owner: document.getElementById('nf-owner').value || 'Unassigned',
+    visibility: document.getElementById('nf-visibility').value,
+  };
+  if(editId){
+    const existing = featureById(editId);
+    Object.assign(existing, data);
+    showToast('Feature updated');
+  } else {
+    features.push({ id: uid('f'), ...data });
+    showToast('Feature created');
+  }
+  closeModal();
+  const activeView = document.querySelector('.view.active').id.replace('view-',''); go(activeView);
+}
+
+function openModuleModal(){
+  openModal(`
+    <button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2>Add module</h2><div class="sub">Features get assigned to a module ? e.g. an HR product might have Payroll, Recruitment.</div>
+    <div class="field"><label>Product</label><select id="nm-product">${products.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Module name</label><input id="nm-name" placeholder="e.g. Payroll"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitModule()">Create module</button></div>
+  `);
+}
+function submitModule(){
+  const name = document.getElementById('nm-name').value.trim();
+  if(!name){ showToast('Give the module a name first'); return; }
+  modules.push({ id: uid('m'), productId: document.getElementById('nm-product').value, name });
+  closeModal(); showToast('Module created'); renderBoard('int');
+}
+
+function openProductModal(){
+  openModal(`
+    <button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2>Create product</h2><div class="sub">Appears immediately in Products, the roadmap dropdown and ? if public ? the landing page.</div>
+    <div class="field"><label>Name</label><input id="np-name" placeholder="e.g. Wragby CRM"></div>
+    <div class="field"><label>Description</label><textarea id="np-desc" rows="2"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Color</label><input id="np-color" type="color" value="#2E63F6" style="height:42px; padding:4px;"></div>
+      <div class="field"><label>Visibility</label><select id="np-visibility"><option value="PRIVATE">Internal</option><option value="PUBLIC">Public</option></select></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitProduct()">Create product</button></div>
+  `);
+}
+function submitProduct(){
+  const name = document.getElementById('np-name').value.trim();
+  if(!name){ showToast('Give the product a name first'); return; }
+  products.push({ id: uid('p'), name, description: document.getElementById('np-desc').value || 'No description yet.', color: document.getElementById('np-color').value, icon:'package', visibility: document.getElementById('np-visibility').value });
+  closeModal(); showToast('Product created'); go('products');
+}
+
+function openUserModal(){
+  openModal(`
+    <button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2>Invite user</h2><div class="sub">Sends an invite and adds them to your workspace.</div>
+    <div class="field"><label>Name</label><input id="nu-name" placeholder="Full name"></div>
+    <div class="field"><label>Email</label><input id="nu-email" type="email" placeholder="name@wragby.com"></div>
+    <div class="field"><label>Role</label><select id="nu-role">
+      <option value="PRODUCT_MANAGER">Product Manager</option><option value="PRODUCT_TEAM_LEAD">Product Team Lead</option><option value="DEVELOPER">Developer</option>
+      <option value="SALES">Sales</option><option value="MARKETING">Marketing</option><option value="MANAGEMENT">Management</option><option value="ADMIN_VIEWER">Admin Viewer</option>
+    </select></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitUser()">Send invite</button></div>
+  `);
+}
+function submitUser(){
+  const name = document.getElementById('nu-name').value.trim(); const email = document.getElementById('nu-email').value.trim();
+  if(!name || !email){ showToast('Name and email are required'); return; }
+  users.push({ name, email, role: document.getElementById('nu-role').value, active:true });
+  closeModal(); showToast('Invite sent to ' + email); renderUsersTable();
+}
+
+/* ==================================================================
+   DASHBOARD
+================================================================== */
+function setDashPeriod(period){
+  dashFilter.period = period;
+  document.querySelectorAll('#dash-period-seg button').forEach((b,i)=>b.classList.toggle('active', ['month','quarter','year'][i]===period));
+  renderDashboard();
+}
+function renderDashProductDropdown(){
+  const panel = document.getElementById('dash-product-panel'); if(!panel) return;
+  const current = dashFilter.product;
+  let html = `<div class="opt ${current==='all'?'active':''}" onclick="selectDashProduct('all')"><span class="sw" style="background:var(--blue);"></span>All products</div>`;
+  html += products.map(p=>`<div class="opt ${current===p.id?'active':''}" onclick="selectDashProduct('${p.id}')"><span class="sw" style="background:${p.color};"></span>${p.name}</div>`).join('');
+  panel.innerHTML = html;
+  document.getElementById('dash-product-label').textContent = current==='all' ? 'All products' : productById(current).name;
+  document.getElementById('dash-product-sw').style.background = current==='all' ? '#2E63F6' : productById(current).color;
+}
+function selectDashProduct(id){ dashFilter.product = id; closeAllDD(); renderDashboard(); }
+
+function addMonths(date, offset){
+  const copy = new Date(date.getFullYear(), date.getMonth(), 1);
+  copy.setMonth(copy.getMonth() + offset);
+  return copy;
+}
+function sameMonth(firstDate, secondDate){ return firstDate.getMonth()===secondDate.getMonth() && firstDate.getFullYear()===secondDate.getFullYear(); }
+function latestFeatureDate(rows){
+  const dates = rows.map(row=>row.endDate ? new Date(row.endDate) : null).filter(Boolean).sort((first, second)=>second-first);
+  return dates[0] || new Date();
+}
+function dashboardTrendBuckets(rows){
+  const anchor = latestFeatureDate(rows);
+  if(dashFilter.period==='month'){
+    const monthStart = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    return [0,1,2,3].map(weekIndex=>{
+      const startDay = weekIndex*7 + 1;
+      const endDay = weekIndex===3 ? new Date(anchor.getFullYear(), anchor.getMonth()+1, 0).getDate() : startDay + 6;
+      const bucketRows = rows.filter(row=>{
+        if(!row.endDate) return false;
+        const endDate = new Date(row.endDate);
+        return sameMonth(endDate, monthStart) && endDate.getDate()>=startDay && endDate.getDate()<=endDay;
+      });
+      return { label:`W${weekIndex+1}`, shipped:bucketRows.filter(row=>row.status==='RELEASED').length, target:bucketRows.length };
+    });
+  }
+  const monthCount = dashFilter.period==='quarter' ? 3 : 6;
+  return Array.from({length:monthCount}, (_, index)=>{
+    const bucketDate = addMonths(anchor, index - monthCount + 1);
+    const bucketRows = rows.filter(row=>row.endDate && sameMonth(new Date(row.endDate), bucketDate));
+    return { label:bucketDate.toLocaleDateString('en-US',{month:'short'}), shipped:bucketRows.filter(row=>row.status==='RELEASED').length, target:bucketRows.length };
+  });
+}
+function renderDeliveryTrend(rows){
+  const buckets = dashboardTrendBuckets(rows);
+  const shippedTotal = buckets.reduce((sum, bucket)=>sum + bucket.shipped, 0);
+  const targetTotal = buckets.reduce((sum, bucket)=>sum + bucket.target, 0);
+  const deliveryRate = targetTotal ? Math.round(shippedTotal / targetTotal * 100) : 0;
+  const subtitleMap = { month:'Current month, grouped by week', quarter:'Current delivery quarter', year:'Last 6 delivery months' };
+  const subtitle = document.getElementById('trend-subtitle');
+  if(subtitle) subtitle.textContent = subtitleMap[dashFilter.period] || 'Actual shipped features over time';
+  const kpis = document.getElementById('trend-kpis');
+  if(kpis) kpis.innerHTML = `<div class="trend-kpi"><b>${shippedTotal}</b><span>Shipped</span></div><div class="trend-kpi"><b>${targetTotal}</b><span>Target</span></div><div class="trend-kpi"><b>${deliveryRate}%</b><span>Rate</span></div>`;
+
+  const chart = document.getElementById('trend-chart'); if(!chart) return;
+  const width = 520, height = 190, leftPad = 42, rightPad = 18, topPad = 18, bottomPad = 38;
+  const plotWidth = width - leftPad - rightPad, plotHeight = height - topPad - bottomPad;
+  const maxValue = Math.max(1, ...buckets.flatMap(bucket=>[bucket.shipped, bucket.target]));
+  const xFor = index => leftPad + (buckets.length===1 ? plotWidth/2 : index * (plotWidth/(buckets.length-1)));
+  const yFor = value => topPad + plotHeight - (value/maxValue)*plotHeight;
+  const shippedPoints = buckets.map((bucket,index)=>`${xFor(index)},${yFor(bucket.shipped)}`).join(' ');
+  const targetPoints = buckets.map((bucket,index)=>`${xFor(index)},${yFor(bucket.target)}`).join(' ');
+  const areaPath = `M ${leftPad},${topPad+plotHeight} L ${buckets.map((bucket,index)=>`${xFor(index)},${yFor(bucket.shipped)}`).join(' L ')} L ${leftPad+plotWidth},${topPad+plotHeight} Z`;
+  const gridValues = [0, Math.ceil(maxValue/2), maxValue];
+  chart.innerHTML =
+    `<defs><linearGradient id="trendFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#2E63F6" stop-opacity=".20"/><stop offset="100%" stop-color="#2E63F6" stop-opacity="0"/></linearGradient></defs>` +
+    gridValues.map(value=>`<g><line x1="${leftPad}" x2="${leftPad+plotWidth}" y1="${yFor(value)}" y2="${yFor(value)}" stroke="var(--border-soft)" stroke-width="1"/><text x="${leftPad-10}" y="${yFor(value)+4}" text-anchor="end" font-size="10" fill="var(--ink-faint)">${value}</text></g>`).join('') +
+    `<path d="${areaPath}" fill="url(#trendFill)"/>` +
+    `<polyline points="${targetPoints}" fill="none" stroke="#94A3B8" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<polyline points="${shippedPoints}" fill="none" stroke="var(--blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>` +
+    buckets.map((bucket,index)=>{
+      const x = xFor(index), shippedY = yFor(bucket.shipped), targetY = yFor(bucket.target);
+      return `<g><line x1="${x}" x2="${x}" y1="${topPad}" y2="${topPad+plotHeight}" stroke="var(--border-soft)" stroke-width="1" opacity=".6"/>
+        <circle cx="${x}" cy="${targetY}" r="3.5" fill="#fff" stroke="#94A3B8" stroke-width="2"><title>${bucket.label}: ${bucket.target} targeted</title></circle>
+        <circle cx="${x}" cy="${shippedY}" r="5" fill="var(--blue)" stroke="#fff" stroke-width="2"><title>${bucket.label}: ${bucket.shipped} shipped / ${bucket.target} targeted</title></circle>
+        <text x="${x}" y="${shippedY-12}" text-anchor="middle" font-size="11" font-weight="800" fill="var(--ink)">${bucket.shipped}</text>
+        <text x="${x}" y="${height-14}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink-faint)">${bucket.label}</text></g>`;
+    }).join('');
+}
+
+function renderDashboard(){
+  renderDashProductDropdown();
+  let scopedAll = getAllFeatures();
+  if(dashFilter.product!=='all') scopedAll = scopedAll.filter(f=>f.productId===dashFilter.product);
+  let all = [...scopedAll];
+  if(dashFilter.period!=='year'){
+    const now = new Date();
+    all = all.filter(f=>{
+      const d = f.endDate ? new Date(f.endDate) : null; if(!d) return false;
+      if(dashFilter.period==='month') return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+      if(dashFilter.period==='quarter'){ const q=Math.floor(now.getMonth()/3); return Math.floor(d.getMonth()/3)===q && d.getFullYear()===now.getFullYear(); }
+      return true;
+    });
+  }
+  const counts = {}; Object.keys(STATUS_LABELS).forEach(s=>counts[s]=0); all.forEach(f=>counts[f.status]++);
+  const pctOfVisible = value => all.length ? Math.round(value/all.length*100)+'%' : '0%';
+  const totalReleased = counts.RELEASED || 1;
+  const stats = [
+    { label:'Total Products', val: products.length, trend:'live', up:true }, { label:'Total Features', val: all.length, trend:'live', up:true },
+    { label:'Released', val: counts.RELEASED, trend: pctOfVisible(counts.RELEASED), up:true },
+    { label:'In Progress', val: counts.IN_PROGRESS, trend: pctOfVisible(counts.IN_PROGRESS), up:true },
+    { label:'Delayed', val: counts.DELAYED, trend: pctOfVisible(counts.DELAYED), up:false },
+    { label:'Upcoming', val: counts.PLANNED+counts.BETA, trend:'next 90 days', up:true },
+  ];
+  document.getElementById('stat-grid').innerHTML = stats.map(s=>`<div class="stat-card"><div class="lbl">${s.label}</div><div class="val">${s.val}</div><div class="trend ${s.up?'up':'down'}">${s.trend}</div></div>`).join('');
+
+  document.getElementById('bars-chart').innerHTML = products.map(p=>{
+    const released = all.filter(f=>f.productId===p.id && f.status==='RELEASED').length;
+    const pct = Math.round(released/totalReleased*100);
+    return `<div class="b"><span class="pct" style="color:${p.color};">${pct}%</span><i style="height:${Math.max(pct*1.2,4)}px; background:${p.color};"></i><span>${p.name.split(' ')[0]}</span></div>`;
+  }).join('');
+
+  const donutColors = {RELEASED:'#22C55E',IN_PROGRESS:'#2E63F6',DELAYED:'#F59E0B',PLANNED:'#94A3B8'};
+  let offset = 0; const total = Object.keys(donutColors).reduce((s,k)=>s+counts[k],0) || 1;
+  document.getElementById('status-donut').innerHTML = `<circle cx="21" cy="21" r="15.9" fill="transparent" stroke="var(--border)" stroke-width="6"></circle>` +
+    Object.keys(donutColors).map(k=>{
+      const pct = counts[k]/total*100; const dash = `${pct} ${100-pct}`; const off = 25-offset; offset += pct;
+      return `<circle cx="21" cy="21" r="15.9" fill="transparent" stroke="${donutColors[k]}" stroke-width="6" stroke-dasharray="${dash}" stroke-dashoffset="${off}"></circle>`;
+    }).join('');
+  document.getElementById('status-legend').innerHTML = Object.keys(donutColors).map(k=>`<div class="activity-row" style="border:none; padding:6px 0;"><span style="display:flex; align-items:center; gap:8px;"><span style="width:9px;height:9px;border-radius:3px;background:${donutColors[k]};display:inline-block;"></span>${STATUS_LABELS[k]}</span><span style="margin-left:auto; font-weight:700;">${counts[k]}</span></div>`).join('');
+
+  renderDeliveryTrend(scopedAll);
+
+
+  document.getElementById('recent-releases-list').innerHTML = all.filter(f=>f.status==='RELEASED').sort((a,b)=>new Date(b.endDate)-new Date(a.endDate)).slice(0,4).map(f=>
+    `<div class="activity-row"><span class="a-dot" style="background:#22C55E;"></span><div><div class="a-text"><b>${f.title}</b></div><div class="a-time">${f.product} ? released ${fmtDate(f.endDate)}</div></div></div>`).join('');
+
+  document.getElementById('upcoming-list').innerHTML = all.filter(f=>f.status==='PLANNED'||f.status==='IN_PROGRESS').sort((a,b)=>new Date(a.endDate)-new Date(b.endDate)).slice(0,4).map(f=>
+    `<div class="activity-row"><span class="a-dot" style="background:${STATUS_COLORS[f.status]};"></span><div><div class="a-text"><b>${f.title}</b></div><div class="a-time">${f.product} ? targeting ${fmtDate(f.endDate)}</div></div></div>`).join('');
+}
+
+/* ==================================================================
+   REPORTS
+================================================================== */
+function renderReports(){
+  const data = [{label:'Feb',val:4},{label:'Mar',val:7},{label:'Apr',val:5},{label:'May',val:9},{label:'Jun',val:6},{label:'Jul',val:8}];
+  document.getElementById('velocity-chart').innerHTML = data.map(d=>`<div class="b"><i style="height:${d.val*14}px;"></i><span>${d.label}</span></div>`).join('');
+}
+
+/* ==================================================================
+   USER MANAGEMENT ? enable/disable
+================================================================== */
+function renderUsersTable(){
+  document.getElementById('users-table-body').innerHTML = users.map((u,i)=>`
+    <tr class="${u.active?'':'u-disabled'}">
+      <td><span class="u-avatar">${u.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</span>${u.name}</td>
+      <td>${u.email}</td><td><span class="role-badge">${u.role.replace(/_/g,' ')}</span></td>
+      <td>${u.active?'Active':'Disabled'}</td>
+      <td><label class="toggle ${u.active?'on':''}" onclick="toggleUserActive(${i})"><div class="toggle-track"></div></label></td>
+    </tr>`).join('');
+}
+function toggleUserActive(i){ users[i].active = !users[i].active; renderUsersTable(); showToast(users[i].name + (users[i].active?' enabled':' disabled')); }
+
+/* ==================================================================
+   SETTINGS
+================================================================== */
+function saveSettings(){
+  document.documentElement.style.setProperty('--blue', document.getElementById('set-color').value);
+  displayDepth = {
+    modules: document.getElementById('depth-modules').checked,
+    level1: document.getElementById('depth-level1').checked,
+    level2: document.getElementById('depth-level2').checked,
+    level3: document.getElementById('depth-level3').checked,
+  };
+  showExactDates = document.getElementById('set-exact-dates').checked;
+  showToast('Settings saved');
+}
+
+/* ==================================================================
+   INIT
+================================================================== */
+
+/* ================= FINAL TOUCH OVERRIDES ================= */
+modules.forEach(m=>{ if(m.active === undefined) m.active = true; });
+users = [
+  { name:'Dami Adisa', email:'dami@wragby.com', role:'SUPER_ADMIN', active:true },
+  { name:'Bisi Tade', email:'bisi@wragby.com', role:'PRODUCT_MANAGER', active:true },
+  { name:'Sales Team', email:'sales@wragby.com', role:'VIEWER', active:false },
+];
+let finalFilters = { search:'', criteria:new Set(['date']), values:{ date:'all', status:'all', priority:'all', visibility:'all' } };
+const FINAL_FILTER_CRITERIA = [
+  { key:'date', label:'Date' }, { key:'priority', label:'Priority' }, { key:'status', label:'Status' }, { key:'visibility', label:'Visibility' }
+];
+let collapsedFeatureIds = new Set();
+let collapsedSidebars = new Set();
+let moduleSidebarCollapsed = { int:false, pub:false };
+let collapsedModuleTreeIds = new Set();
+
+function roleLabel(role){ return role.replace(/_/g,' ').toLowerCase().replace(/\b\w/g, c=>c.toUpperCase()); }
+function isSuperAdmin(){ return session.role==='SUPER_ADMIN'; }
+function isViewer(){ return session.role==='VIEWER'; }
+function canEdit(){ return !isViewer(); }
+function canAccessView(view){ return !(view==='users' || view==='settings') || isSuperAdmin(); }
+
+renderSidebar = function(activeView){
+  ['dashboard','roadmap','features','products','reports','users','settings'].forEach(v=>{
+    const el = document.getElementById('sidebar-'+v); if(!el) return;
+    const collapsed = collapsedSidebars.has(v);
+    el.classList.toggle('collapsed', collapsed);
+    const main = [
+      { view:'dashboard', label:'Dashboard', icon:'layout-dashboard' },
+      { view:'roadmap', label:'Roadmap', icon:'map' },
+      { view:'products', label:'Products', icon:'package' },
+      { view:'features', label:'Features', icon:'list' },
+    ];
+    let html = `<div class="side-logo logo" style="font-size:18px;" onclick="go('landing')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="pin"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8z" fill="currentColor"/><circle cx="12" cy="10" r="3.2" fill="white"/></svg><span class="side-brand">Roadimap</span></div>`;
+    html += `<button class="icon-btn side-collapse" onclick="toggleSidebarCollapse('${v}')" title="${collapsed?'Expand sidebar':'Collapse sidebar'}"><i data-lucide="${collapsed?'panel-left-open':'panel-left-close'}"></i><span>${collapsed?'Expand':'Collapse'}</span></button>`;
+    main.forEach(i=>{ html += `<a class="side-link ${i.view===activeView?'active':''}" onclick="go('${i.view}')"><i data-lucide="${i.icon}"></i><span>${i.label}</span></a>`; });
+    if(isSuperAdmin()){
+      html += `<div class="side-sep"></div>`;
+      [{ view:'users', label:'User', icon:'users' }, { view:'settings', label:'Settings', icon:'settings' }].forEach(i=>{
+        html += `<a class="side-link ${i.view===activeView?'active':''}" onclick="go('${i.view}')"><i data-lucide="${i.icon}"></i><span>${i.label}</span></a>`;
+      });
+    }
+    html += `<div style="margin-top:auto;"></div><div class="side-sep"></div><a class="side-link" onclick="doLogout()"><i data-lucide="log-out"></i><span>Logout</span></a>`;
+    el.innerHTML = html;
+  });
+  buildTopbars(); lucide.createIcons();
+};
+function toggleSidebarCollapse(view){ collapsedSidebars.has(view) ? collapsedSidebars.delete(view) : collapsedSidebars.add(view); renderSidebar(view); }
+
+buildTopbars = function(){
+  ['dashboard','roadmap','features','products','reports','users','settings'].forEach(v=>{
+    const el = document.getElementById('topbar-'+v); if(!el) return;
+    el.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+        <button class="icon-btn hamburger-btn" onclick="toggleMobileSidebar()"><i data-lucide="menu"></i></button>
+      </div>
+      <div class="top-right">
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><i data-lucide="${theme==='dark'?'sun':'moon'}" id="theme-icon"></i></button>
+        <div class="dd"><button class="icon-btn" onclick="toggleDD('notif-panel-${v}')"><i data-lucide="bell"></i><span class="dot-badge"></span></button>
+          <div class="dd-panel right notif-panel" id="notif-panel-${v}">
+            <div class="notif-item"><b>Feature delayed</b><span>Authenticator push routing moved to Delayed</span></div>
+            <div class="notif-item"><b>New comment</b><span>Chidi commented on Letter of Non-Indebtedness</span></div>
+            <div class="notif-item"><b>Release shipped</b><span>To Naira conversion flow marked Released</span></div>
+          </div></div>
+        <div class="workspace-pill"><i data-lucide="briefcase" style="width:14px;height:14px;"></i><span>Wragby Product</span></div>
+        <div class="dd"><div class="avatar" onclick="toggleDD('avatar-panel-${v}')">${session.initials}</div>
+          <div class="dd-panel right avatar-menu" id="avatar-panel-${v}">
+            <div class="who"><b>${session.name}</b><span>${roleLabel(session.role)}</span></div>
+            ${isSuperAdmin()?`<a onclick="go('settings')"><i data-lucide="settings" style="width:14px;height:14px;"></i>Settings</a>`:''}
+            <a onclick="doLogout()"><i data-lucide="log-out" style="width:14px;height:14px;"></i>Logout</a>
+          </div></div>
+      </div>`;
+  });
+  lucide.createIcons();
+};
+
+const originalGo = go;
+go = function(view){
+  if(INTERNAL_VIEWS.includes(view) && session.loggedIn && !canAccessView(view)){ showToast('Your role cannot access that page'); view='dashboard'; }
+  originalGo(view);
+};
+
+function optionPanel(id, current, items, onClick){
+  const panel = document.getElementById(id); if(!panel) return;
+  panel.innerHTML = items.map(i=>`<div class="opt ${current===i.value?'active':''}" onclick="${onClick(i.value)}">${i.label}</div>`).join('');
+}
+function ensureControlDropdown(scope){
+  const viewSeg = document.getElementById(scope+'-view-seg');
+  if(viewSeg && !document.getElementById(scope+'-view-panel')){
+    viewSeg.className = 'product-select dd';
+    viewSeg.innerHTML = `<button onclick="toggleDD('${scope}-view-panel')"><span id="${scope}-view-label"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button><div class="dd-panel left product-select-panel" id="${scope}-view-panel"></div>`;
+  }
+  const zoomSeg = document.getElementById(scope+'-zoom-seg');
+  if(zoomSeg && !document.getElementById(scope+'-zoom-panel')){
+    zoomSeg.className = 'product-select dd';
+    zoomSeg.innerHTML = `<button onclick="toggleDD('${scope}-zoom-panel')"><span id="${scope}-zoom-label"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button><div class="dd-panel left product-select-panel" id="${scope}-zoom-panel"></div>`;
+  }
+  const viewLabels = {gantt:'Gantt',list:'List',kanban:'Kanban'};
+  const viewOrder = scope==='ft' ? ['list','gantt','kanban'] : ['gantt','list','kanban'];
+  optionPanel(scope+'-view-panel', boardView[scope], viewOrder.map(v=>({value:v,label:viewLabels[v]})), v=>`setBoardView('${scope}','${v}')`);
+  const viewLabel = document.getElementById(scope+'-view-label'); if(viewLabel) viewLabel.textContent = viewLabels[boardView[scope]];
+  const zoomLabels = {month:'Month',quarter:'Quarter',year:'Year'};
+  optionPanel(scope+'-zoom-panel', zoomState[scope], ['month','quarter','year'].map(v=>({value:v,label:zoomLabels[v]})), v=>`setZoom('${v}','${scope}')`);
+  const zoomLabel = document.getElementById(scope+'-zoom-label'); if(zoomLabel) zoomLabel.textContent = zoomLabels[zoomState[scope]];
+}
+function ensurePublicFilter(){
+  const toolbar = document.querySelector('#view-public-roadmap .rm-toolbar > .dd');
+  if(toolbar && !document.getElementById('pub-filter-panel')){
+    const wrap = document.createElement('div');
+    wrap.className = 'toolbar-right';
+    wrap.innerHTML = `<div class="dd"><button class="btn btn-ghost btn-sm" onclick="toggleDD('pub-filter-panel')"><i data-lucide="sliders-horizontal" style="width:14px;height:14px;"></i>Filter<span id="pub-filter-count-badge"></span></button><div class="dd-panel right filter-panel" id="pub-filter-panel"></div></div>`;
+    toolbar.parentNode.insertBefore(wrap, toolbar);
+    wrap.appendChild(toolbar);
+  }
+}
+setBoardView = function(scope, view){
+  boardView[scope] = view; closeAllDD();
+  document.getElementById(scope+'-gantt-wrap').style.display = view==='gantt' ? '' : 'none';
+  document.getElementById(scope+'-list-wrap').style.display = view==='list' ? '' : 'none';
+  const kb = document.getElementById(scope+'-kanban-wrap'); if(kb) kb.style.display = view==='kanban' ? 'flex' : 'none';
+  const zoom = document.getElementById(scope+'-zoom-seg'); if(zoom) zoom.style.display = view==='gantt' ? '' : 'none';
+  renderBoard(scope);
+};
+setZoom = function(level, scope){ zoomState[scope] = level; closeAllDD(); renderBoard(scope); };
+
+renderFilterPanel = function(panelId){
+  const scope = panelId.split('-')[0], panel = document.getElementById(panelId); if(!panel) return;
+  const host = panel.closest('.dd');
+  if(host){
+    host.className = 'filter-inline-host';
+    const trigger = host.querySelector(':scope > button');
+    if(trigger) trigger.remove();
+  }
+  panel.className = 'filter-strip';
+  panel.classList.add('open');
+  if(!finalFilters.criteria.size) finalFilters.criteria.add('date');
+  const active = [...finalFilters.criteria];
+  const moreId = `${scope}-more-filter-panel`;
+  const remaining = FINAL_FILTER_CRITERIA.filter(c=>!finalFilters.criteria.has(c.key));
+  panel.innerHTML = active.map(k=>activeFilterControl(scope,k)).join('') +
+    `<div class="dd"><button class="more-filter-btn" onclick="toggleDD('${moreId}')"><span class="plus">+</span> More Filters</button><div class="dd-panel left filter-panel more-filter-menu" id="${moreId}">
+      ${remaining.length ? remaining.map(c=>`<div class="filter-criterion"><button onclick="addFilterCriterion('${c.key}','${scope}')">+</button><span>${c.label}</span></div>`).join('') : `<div style="font-size:13px;color:var(--ink-faint);padding:8px 10px;">All filters are shown</div>`}
+    </div></div><button class="reset-filter-btn" onclick="clearFilters('${panelId}')">Reset to Default</button>`;
+};
+function filterValuesFor(key){
+  if(key==='date') return [{value:'all',label:'All dates'},{value:'recent',label:'Recent releases'},{value:'month',label:'This month'}];
+  if(key==='status') return [{value:'all',label:'Any status'}, ...Object.keys(STATUS_LABELS).map(s=>({value:s,label:STATUS_LABELS[s]}))];
+  if(key==='priority') return [{value:'all',label:'Any priority'}, ...[1,2,3,4,5].map(p=>({value:String(p),label:`P${p} ${PRIORITY_META[p].label}`}))];
+  if(key==='visibility') return [{value:'all',label:'Any visibility'},{value:'PUBLIC',label:'Public'},{value:'PRIVATE',label:'Internal'}];
+  return [];
+}
+function filterValueLabel(key, val){ return (filterValuesFor(key).find(v=>v.value===String(val)) || {label:'Any'}).label; }
+function filterValueOptions(scope, key){ return filterValuesFor(key).map(v=>`<div class="opt ${String(finalFilters.values[key])===String(v.value)?'active':''}" onclick="setFilterValue('${key}','${v.value}','${scope}')">${v.label}</div>`).join(''); }
+function activeFilterControl(scope, key){
+  const meta = FINAL_FILTER_CRITERIA.find(c=>c.key===key);
+  const remove = key==='date' ? '' : `<button type="button" onclick="removeFilterCriterion('${key}','${scope}')" title="Remove ${meta.label}">×</button>`;
+  return `<label class="filter-control"><span class="filter-control-label">${meta.label}: ${remove}</span><select onchange="setFilterValue('${key}', this.value, '${scope}')">${filterValuesFor(key).map(v=>`<option value="${v.value}" ${String(finalFilters.values[key])===String(v.value)?'selected':''}>${v.label}</option>`).join('')}</select></label>`;
+}
+function activeFilterChip(scope, key){ return activeFilterControl(scope, key); }
+function addFilterCriterion(key, scope){ finalFilters.criteria.add(key); closeAllDD(); renderBoard(scope); }
+function removeFilterCriterion(key, scope){ if(key!=='date') finalFilters.criteria.delete(key); finalFilters.values[key]='all'; closeAllDD(); renderBoard(scope); }
+function setFilterValue(key, value, scope){ finalFilters.values[key]=value; renderBoard('int'); renderBoard('ft'); renderBoard('pub'); }
+clearFilters = function(panelId){ finalFilters.criteria=new Set(['date']); finalFilters.values={date:'all',status:'all',priority:'all',visibility:'all'}; renderBoard('int'); renderBoard('ft'); renderBoard('pub'); showToast('Filters reset'); };
+updateFilterBadges = function(){
+  const activeCount = [...finalFilters.criteria].filter(k=>k!=='date' || finalFilters.values.date!=='all').length;
+  const label = activeCount ? ` (${activeCount})` : '';
+  ['int','ft','pub'].forEach(s=>{ const el=document.getElementById(s+'-filter-count-badge'); if(el) el.textContent=label; });
+};
+function isRecentRelease(f){ if(f.status!=='RELEASED'||!f.endDate) return false; const today=new Date('2026-07-11'), cutoff=new Date(today); cutoff.setMonth(cutoff.getMonth()-1); const end=new Date(f.endDate); return end>=cutoff && end<=today; }
+getFilteredFeatures = function(scope){
+  let list = getAllFeatures().filter(f=> finalFilters.search==='' || f.title.toLowerCase().includes(finalFilters.search));
+  if(finalFilters.criteria.has('status') && finalFilters.values.status!=='all') list = list.filter(f=>f.status===finalFilters.values.status);
+  if(finalFilters.criteria.has('priority') && finalFilters.values.priority!=='all') list = list.filter(f=>String(f.priority)===String(finalFilters.values.priority));
+  if(scope!=='pub' && finalFilters.criteria.has('visibility') && finalFilters.values.visibility!=='all') list = list.filter(f=>f.visibility===finalFilters.values.visibility);
+  if(finalFilters.criteria.has('date')){
+    if(finalFilters.values.date==='month') list = list.filter(isInThisMonth);
+    if(finalFilters.values.date==='recent') list = list.filter(isRecentRelease);
+  }
+  return list;
+};
+setSearch = function(val){ finalFilters.search = val.toLowerCase(); renderBoard('ft'); };
+function openRecentReleases(){ finalFilters.criteria = new Set(['date','status']); finalFilters.values = {date:'recent',status:'RELEASED',priority:'all',visibility:'all'}; boardView.ft='list'; productFilter.ft='all'; go('features'); }
+
+flattenTree = function(roots, depth, scope){
+  depth = depth || 0; let out = [];
+  roots.forEach(f=>{
+    const children = f._children || [];
+    out.push({...f, _depth:depth, _hasChildren:children.length>0});
+    if(children.length && !(scope==='ft' && collapsedFeatureIds.has(f.id))) out.push(...flattenTree(children, depth+1, scope));
+  });
+  return out;
+};
+getBoardGroups = function(scope, publicOnly){
+  let list = getFilteredFeatures(scope);
+  const hideInactiveModules = scope==='int' || scope==='pub';
+  if(hideInactiveModules) list = list.filter(f=>!f.moduleId || moduleById(f.moduleId)?.active!==false);
+  if(publicOnly) list = list.filter(f=>f.visibility==='PUBLIC');
+  if(productFilter[scope] && productFilter[scope]!=='all') list = list.filter(f=>f.productId===productFilter[scope]);
+  if(moduleFilter[scope] && moduleFilter[scope]!=='all') list = list.filter(f=>f.moduleId===moduleFilter[scope]);
+  const relevantProducts = (publicOnly ? products.filter(p=>p.visibility==='PUBLIC') : products).filter(p=>!productFilter[scope]||productFilter[scope]==='all'||p.id===productFilter[scope]);
+  return relevantProducts.map(p=>{
+    const prodFeatures = list.filter(f=>f.productId===p.id);
+    if(publicOnly && !displayDepth.modules){
+      const rows = applyDepthLimit(flattenTree(buildTree(prodFeatures),0,scope), publicOnly);
+      return { product:p, modGroups: rows.length ? [{module:null, rows}] : [] };
+    }
+    const modIds = [...new Set(prodFeatures.map(f=>f.moduleId).filter(Boolean))];
+    const modGroups = modules.filter(m=>m.productId===p.id && modIds.includes(m.id) && (!hideInactiveModules || m.active!==false)).map(m=>({
+      module:m, rows: applyDepthLimit(flattenTree(buildTree(prodFeatures.filter(f=>f.moduleId===m.id)),0,scope), publicOnly)
+    })).filter(g=>g.rows.length>0);
+    const noMod = prodFeatures.filter(f=>!f.moduleId);
+    if(noMod.length){ const rows = applyDepthLimit(flattenTree(buildTree(noMod),0,scope), publicOnly); if(rows.length) modGroups.push({module:null, rows}); }
+    return { product:p, modGroups };
+  }).filter(g=>g.modGroups.length>0);
+};
+function toggleFeatureCollapse(id, scope){ collapsedFeatureIds.has(id) ? collapsedFeatureIds.delete(id) : collapsedFeatureIds.add(id); renderBoard(scope||'ft'); }
+
+listCell = function(f, key, product, module, scope, publicOnly){
+  if(key==='product'){
+    if(!product) return '?';
+    const target = f._depth>0 && f.parentId ? featureById(f.parentId) : f;
+    const add = (!publicOnly && canEdit() && target) ? `<span class="add-sub-btn" onclick='event.stopPropagation(); openFeatureModal(${JSON.stringify({parentId:target.id, productId:target.productId, moduleId:target.moduleId}).replace(/'/g,"&apos;")})' title="Add sub-feature">+</span>` : '';
+    return `<div class="product-cell-with-add">${add}<span>${product.name}</span></div>`;
+  }
+  if(key==='module'){
+    if(!module) return '?';
+    return `${module.name}${module.active===false ? '<span class="inactive-module-badge">Inactive</span>' : ''}`;
+  }
+  if(key==='title'){
+    const isSub = f._depth>0, hasChildren = !!f._hasChildren;
+    const toggle = hasChildren ? `<button class="feature-toggle ${collapsedFeatureIds.has(f.id)?'collapsed':''}" onclick="event.stopPropagation(); toggleFeatureCollapse('${f.id}','ft')"><i data-lucide="chevron-down" style="width:14px;height:14px;"></i></button>` : (isSub ? `<i data-lucide="corner-down-right" style="width:12px;height:12px;color:var(--ink-faint); flex-shrink:0;"></i>` : `<span class="fdot" style="background:${STATUS_COLORS[f.status]};"></span>`);
+    return `<div style="display:flex; align-items:center; gap:8px; padding-left:${f._depth*20}px;">${toggle}<span style="${isSub?'font-weight:500;font-size:12.5px;color:var(--ink-soft);':'font-weight:700;'}">${f.title}</span></div>`;
+  }
+  if(key==='dates') return `<span class="date-cell">${fmtDate(f.startDate)} - ${fmtDate(f.endDate)}</span>`;
+  if(key==='status') return `<span class="status-badge" style="background:${STATUS_COLORS[f.status]}22; color:${STATUS_COLORS[f.status]};"><span class="dot" style="background:${STATUS_COLORS[f.status]};"></span>${STATUS_LABELS[f.status]}</span>`;
+  if(key==='priority') return `<span class="prio-badge" style="background:${PRIORITY_META[f.priority].color}22; color:${PRIORITY_META[f.priority].color}; padding:3px 8px; font-size:11.5px;">P${f.priority} ? ${PRIORITY_META[f.priority].label}</span>`;
+  if(key==='progress') return `<span class="mini-bar-bg"><span class="mini-bar-fg" style="width:${f.progress}%; background:${STATUS_COLORS[f.status]}; display:block;"></span></span>${viewingPublic ? '' : f.progress+'%'}`;
+  if(key==='visibility') return f.visibility==='PUBLIC'?'Public':'Internal';
+  if(key==='owner') return f.owner||'?';
+  return f[key] ?? '?';
+};
+renderListView = function(scope, publicOnly){
+  const headEl = document.getElementById(scope+'-list-head'), bodyEl = document.getElementById(scope+'-list-body'); if(!headEl) return;
+  const cols = scope==='ft' ? FEATURE_COLUMNS.filter(c=>activeColumns.has(c.key)) : FEATURE_COLUMNS.filter(c=>c.key!=='visibility');
+  headEl.innerHTML = cols.map(c=>`<th>${c.label}</th>`).join('') + `<th></th>`;
+  const groups = getBoardGroups(scope, publicOnly);
+  if(groups.length===0){ bodyEl.innerHTML = `<tr><td colspan="${cols.length+1}"><div class="empty-state">No features match your filters.</div></td></tr>`; return; }
+  let rowsHtml = '';
+  groups.forEach(g=>g.modGroups.forEach(mg=>mg.rows.forEach(f=>{
+    rowsHtml += `<tr onclick='openDrawer(${JSON.stringify(f).replace(/'/g,"&apos;")})'>`;
+    cols.forEach(c=>{ rowsHtml += `<td>${listCell(f, c.key, g.product, mg.module, scope, publicOnly)}</td>`; });
+    rowsHtml += `<td>${!publicOnly && canEdit() ? `<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); deleteFeature('${f.id}')">Delete</button>` : ''}</td></tr>`;
+  })));
+  bodyEl.innerHTML = rowsHtml; lucide.createIcons();
+};
+
+function moduleFeatureRows(moduleId, scope, publicOnly){
+  let moduleFeatures = getFilteredFeatures(scope).filter(f=>f.moduleId===moduleId);
+  if(publicOnly) moduleFeatures = moduleFeatures.filter(f=>f.visibility==='PUBLIC');
+  const rows = flattenTree(buildTree(moduleFeatures), 0, `module-${scope}`);
+  if(!rows.length) return `<div style="font-size:12px;color:var(--ink-faint);padding:6px 5px;">No features yet</div>`;
+  return rows.map(f=>{
+    const isSub = f._depth>0;
+    const marker = isSub ? `<i data-lucide="corner-down-right" style="width:11px;height:11px;flex-shrink:0;"></i>` : `<span class="fdot" style="background:${STATUS_COLORS[f.status]};"></span>`;
+    const add = (!isSub && !publicOnly && canEdit()) ? `<span class="add-sub-btn" onclick='event.stopPropagation(); openFeatureModal(${JSON.stringify({parentId:f.id, productId:f.productId, moduleId:f.moduleId}).replace(/'/g,"&apos;")})' title="Add sub-feature">+</span>` : '';
+    return `<div class="module-feature-row" style="padding-left:${5 + f._depth*14}px;" onclick='openDrawer(${JSON.stringify(f).replace(/'/g,"&apos;")})'>${marker}<span class="name">${f.title}</span>${add}</div>`;
+  }).join('');
+}
+function moduleTableDropdown(m){
+  const panelId = `products-module-panel-${m.id}`;
+  return `<div class="dd module-cell-dd module-table-name" onclick="event.stopPropagation();"><button class="module-cell-btn" onclick="toggleDD('${panelId}')" title="Show features in ${m.name}"><span>${m.name}</span><i data-lucide="chevron-down" style="width:13px;height:13px;"></i></button><div class="dd-panel left module-cell-panel" id="${panelId}">${moduleFeatureRows(m.id, 'int', false)}</div></div>`;
+}
+renderModuleSidebar = function(scope){
+  const el = document.getElementById(scope+'-module-sidebar'); if(!el) return;
+  el.classList.toggle('collapsed', !!moduleSidebarCollapsed[scope]);
+  const publicOnly = scope==='pub';
+  const pf = productFilter[scope], relevantProducts = publicOnly ? products.filter(p=>p.visibility==='PUBLIC') : products;
+  const mods = (pf==='all' ? modules.filter(m=>relevantProducts.some(p=>p.id===m.productId)) : modules.filter(m=>m.productId===pf)).filter(m=>m.active!==false);
+  const current = moduleFilter[scope];
+  let html = `<button class="module-toggle" onclick="toggleModuleSidebar('${scope}')" title="${moduleSidebarCollapsed[scope]?'Expand modules':'Collapse modules'}"><i data-lucide="${moduleSidebarCollapsed[scope]?'panel-left-open':'panel-left-close'}" style="width:15px;height:15px;"></i></button><div class="module-list"><h4>Modules</h4><div class="msi ${current==='all'?'active':''}" onclick="selectModuleFilter('${scope}','all')"><span>All modules</span></div>`;
+  html += mods.map(m=>{
+    const visibleFeatures = getFilteredFeatures(scope).filter(f=>f.moduleId===m.id && (!publicOnly || f.visibility==='PUBLIC'));
+    const cnt = visibleFeatures.length;
+    const prefix = pf==='all' ? productById(m.productId).name+' · ' : '';
+    const closed = collapsedModuleTreeIds.has(`${scope}:${m.id}`);
+    return `<div class="module-node ${closed?'closed':''}">
+      <button class="module-node-head ${current===m.id?'active':''}" onclick="toggleModuleTree('${scope}','${m.id}')"><i data-lucide="chevron-down" class="chev" style="width:13px;height:13px;"></i><span>${prefix}${m.name}</span><span class="cnt">${cnt}</span></button>
+      <div class="module-feature-tree">${moduleFeatureRows(m.id, scope, publicOnly)}</div>
+    </div>`;
+  }).join('') + `</div>`;
+  el.innerHTML = html; lucide.createIcons();
+};
+function toggleModuleTree(scope, moduleId){
+  const key = `${scope}:${moduleId}`;
+  collapsedModuleTreeIds.has(key) ? collapsedModuleTreeIds.delete(key) : collapsedModuleTreeIds.add(key);
+  renderModuleSidebar(scope);
+}
+function toggleModuleSidebar(scope){ moduleSidebarCollapsed[scope] = !moduleSidebarCollapsed[scope]; renderModuleSidebar(scope); }
+
+renderBoard = function(scope){
+  const publicOnly = scope==='pub'; viewingPublic = publicOnly;
+  ensurePublicFilter(); ensureControlDropdown(scope); renderProductDropdown(scope, publicOnly);
+  if(scope==='int'){ renderFilterPanel(scope+'-filter-panel'); renderModuleSidebar(scope); }
+  if(scope==='pub'){ renderFilterPanel(scope+'-filter-panel'); renderModuleSidebar(scope); }
+  if(scope==='ft'){ renderFilterPanel('ft-filter-panel'); buildColMenu(); }
+  updateFilterBadges(); ensureControlDropdown(scope);
+  const view = boardView[scope];
+  if(view==='gantt') renderGanttView(scope, publicOnly);
+  else if(view==='list') renderListView(scope, publicOnly);
+  else if(view==='kanban') renderKanbanView(scope, publicOnly);
+};
+
+function renderModulesTable(){
+  const body = document.getElementById('modules-table-body'); if(!body) return;
+  body.innerHTML = modules.map(m=>{
+    const p = productById(m.productId), count = features.filter(f=>f.moduleId===m.id).length;
+    return `<tr><td>${moduleTableDropdown(m)}</td><td>${p?p.name:'-'}</td><td>${m.active===false?'Inactive':'Active'}</td><td>${count}</td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openModuleModal('${m.id}')">Edit</button><button class="btn btn-ghost btn-sm" onclick="toggleModuleActive('${m.id}')">${m.active===false?'Activate':'Inactive'}</button><button class="btn btn-ghost btn-sm" onclick="deleteModule('${m.id}')">Delete</button></td></tr>`;
+  }).join('');
+  lucide.createIcons();
+}
+const originalRenderInternalProducts = renderInternalProducts;
+renderInternalProducts = function(){
+  originalRenderInternalProducts();
+  document.querySelectorAll('#internal-product-grid .product-card').forEach(card=>{
+    if(card.querySelector('[data-delete-product]')) return;
+    const onclick = card.getAttribute('onclick') || '';
+    const match = onclick.match(/'([^']+)'/); if(!match) return;
+    const top = card.querySelector('div');
+    if(top) top.insertAdjacentHTML('beforeend', `<button data-delete-product class="icon-btn" onclick="event.stopPropagation(); deleteProduct('${match[1]}')" title="Delete product"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>`);
+  });
+  if(!document.getElementById('modules-table-body')){
+    document.getElementById('internal-view-more').insertAdjacentHTML('afterend', `<div class="panel" style="margin-top:22px;"><div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;"><h3 style="margin:0;">Modules</h3><button class="btn btn-primary btn-sm" onclick="openModuleModal()">+ Create Module</button></div><div class="ftable-wrap"><table class="ftable"><thead><tr><th>Module</th><th>Product</th><th>Status</th><th>Features</th><th></th></tr></thead><tbody id="modules-table-body"></tbody></table></div></div>`);
+  }
+  renderModulesTable();
+};
+moduleOptionsFor = function(productId){ return modules.filter(m=>m.productId===productId && m.active!==false).map(m=>`<option value="${m.id}">${m.name}</option>`).join(''); };
+function deleteFeature(id){
+  if(!canEdit()){ showToast('Viewers cannot delete features'); return; }
+  const childIds = new Set(features.filter(f=>f.parentId===id).map(f=>f.id));
+  features = features.filter(f=>f.id!==id && !childIds.has(f.id));
+  closeDrawer(); go(document.querySelector('.view.active').id.replace('view-','')); showToast('Feature deleted');
+}
+const originalOpenFeatureModal = openFeatureModal;
+openFeatureModal = function(prefill){ if(!canEdit()){ showToast('Viewers cannot edit features'); return; } originalOpenFeatureModal(prefill); };
+const originalSubmitFeature = submitFeature;
+submitFeature = function(){ if(!canEdit()){ showToast('Viewers cannot edit features'); return; } originalSubmitFeature(); };
+openModuleModal = function(id){
+  if(!canEdit()){ showToast('Viewers cannot edit modules'); return; }
+  const editing = !!id && !!moduleById(id), m = editing ? moduleById(id) : { productId:products[0].id, name:'', active:true };
+  openModal(`<button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button><h2>${editing?'Edit module':'Create module'}</h2><div class="sub">Create, rename or make modules inactive without removing their features.</div><input type="hidden" id="nm-edit-id" value="${editing?m.id:''}"><div class="field"><label>Product</label><select id="nm-product" ${editing?'disabled':''}>${products.map(p=>`<option value="${p.id}" ${m.productId===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div><div class="field"><label>Module name</label><input id="nm-name" placeholder="e.g. Payroll" value="${(m.name||'').replace(/"/g,'&quot;')}"></div><label class="row" style="display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14px;"><input type="checkbox" id="nm-active" ${m.active!==false?'checked':''}> <b>Active</b></label><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitModule()">${editing?'Save changes':'Create module'}</button></div>`);
+};
+submitModule = function(){
+  if(!canEdit()){ showToast('Viewers cannot edit modules'); return; }
+  const name = document.getElementById('nm-name').value.trim(); if(!name){ showToast('Give the module a name first'); return; }
+  const editId = document.getElementById('nm-edit-id').value;
+  if(editId){ const m = moduleById(editId); m.name = name; m.active = document.getElementById('nm-active').checked; if(m.active===false){ ['int','pub'].forEach(s=>{ if(moduleFilter[s]===m.id) moduleFilter[s]='all'; }); } showToast('Module updated'); }
+  else { modules.push({ id:uid('m'), productId:document.getElementById('nm-product').value, name, active:document.getElementById('nm-active').checked }); showToast('Module created'); }
+  closeModal(); go(document.querySelector('.view.active').id.replace('view-',''));
+};
+function toggleModuleActive(id){
+  const m = moduleById(id);
+  m.active = m.active===false;
+  if(m.active===false){ ['int','pub'].forEach(s=>{ if(moduleFilter[s]===id) moduleFilter[s]='all'; }); }
+  renderModulesTable();
+  renderBoard('int');
+  renderBoard('pub');
+  renderBoard('ft');
+  showToast(m.name + (m.active?' activated':' made inactive'));
+}
+function deleteModule(id){
+  if(!canEdit()){ showToast('Viewers cannot delete modules'); return; }
+  const count = features.filter(f=>f.moduleId===id).length;
+  if(count){ showToast('Delete all features under this module first'); return; }
+  modules = modules.filter(m=>m.id!==id); renderModulesTable(); renderBoard('int'); showToast('Module deleted');
+}
+function deleteProduct(id){
+  if(!canEdit()){ showToast('Viewers cannot delete products'); return; }
+  if(features.some(f=>f.productId===id)){ showToast('Delete this product features first'); return; }
+  products = products.filter(p=>p.id!==id); modules = modules.filter(m=>m.productId!==id); renderInternalProducts(); showToast('Product deleted');
+}
+const originalOpenProductModal = openProductModal;
+openProductModal = function(){ if(!canEdit()){ showToast('Viewers cannot create products'); return; } originalOpenProductModal(); };
+const originalSubmitProduct = submitProduct;
+submitProduct = function(){ if(!canEdit()){ showToast('Viewers cannot create products'); return; } originalSubmitProduct(); };
+const originalRenderUsersTable = renderUsersTable;
+renderUsersTable = function(){ originalRenderUsersTable(); document.querySelectorAll('.role-badge').forEach(el=>{ el.textContent = roleLabel(el.textContent.trim().replace(/\s+/g,'_')); }); };
+const originalOpenUserModal = openUserModal;
+openUserModal = function(){
+  originalOpenUserModal();
+  const role = document.getElementById('nu-role');
+  if(role) role.innerHTML = `<option value="PRODUCT_MANAGER">Product Manager</option><option value="VIEWER">Viewer</option><option value="SUPER_ADMIN">Super Admin</option>`;
+};
+const originalRenderDashboard = renderDashboard;
+renderDashboard = function(){
+  originalRenderDashboard();
+  const seg = document.getElementById('dash-period-seg');
+  if(seg && !document.getElementById('dash-period-panel')){
+    seg.className = 'product-select dd';
+    seg.innerHTML = `<button onclick="toggleDD('dash-period-panel')"><span id="dash-period-label"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button><div class="dd-panel left product-select-panel" id="dash-period-panel"></div>`;
+  }
+  const labels = {month:'Month',quarter:'Quarter',year:'Year'};
+  optionPanel('dash-period-panel', dashFilter.period, ['month','quarter','year'].map(v=>({value:v,label:labels[v]})), v=>`setDashPeriod('${v}')`);
+  const label = document.getElementById('dash-period-label'); if(label) label.textContent = labels[dashFilter.period];
+  const recentPanel = document.getElementById('recent-releases-list')?.closest('.panel');
+  if(recentPanel && !recentPanel.querySelector('[data-recent-link]')){
+    recentPanel.querySelector('button')?.remove();
+    recentPanel.insertAdjacentHTML('beforeend', `<button data-recent-link class="btn btn-ghost btn-sm" style="width:100%; justify-content:center; margin-top:12px;" onclick="openRecentReleases()">View recent releases</button>`);
+  }
+};
+setDashPeriod = function(period){ dashFilter.period = period; closeAllDD(); renderDashboard(); };
+const originalSaveSettings = saveSettings;
+saveSettings = function(){
+  document.getElementById('depth-level1').checked = true;
+  originalSaveSettings();
+  displayDepth.level1 = true;
+  renderBoard('pub');
+};
+document.addEventListener('DOMContentLoaded', ()=>{ const d=document.getElementById('depth-level1'); if(d){ d.checked=true; d.disabled=true; } });
+
+/* ==================================================================
+   BACKEND INTEGRATION
+   Connects the prototype to the live Roadimap API (NestJS + Prisma + PostgreSQL).
+   Everything above this point is unchanged UI/render logic; from here down we
+   override the data-mutating functions to talk to the real backend instead of
+   the in-memory arrays, and load real data on login / on first public visit.
+================================================================== */
+const API_BASE = 'https://rodie-map-backend.onrender.com/api';
+let authToken = null;
+
+async function apiFetch(path, options){
+  options = options || {};
+  const headers = Object.assign({ 'Content-Type':'application/json' }, options.headers||{});
+  if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  let res;
+  try {
+    res = await fetch(API_BASE + path, Object.assign({}, options, { headers }));
+  } catch(networkErr){
+    throw new Error('Could not reach the server. It may be waking up (free tier) — try again in a moment.');
+  }
+  let data = null;
+  const ct = res.headers.get('content-type') || '';
+  if(ct.includes('application/json')){ data = await res.json().catch(()=>null); }
+  if(!res.ok){
+    const msg = data && data.message ? data.message : (res.statusText || 'Request failed');
+    throw new Error(Array.isArray(msg) ? msg.join(', ') : msg);
+  }
+  return data;
+}
+
+// Prisma returns full ISO datetimes; <input type="date"> and fmtDate() want YYYY-MM-DD.
+function mapFeatureDates(f){
+  return Object.assign({}, f, {
+    startDate: f.startDate ? String(f.startDate).slice(0,10) : '',
+    endDate: f.endDate ? String(f.endDate).slice(0,10) : '',
+    relaunchDate: f.relaunchDate ? String(f.relaunchDate).slice(0,10) : '',
+  });
+}
+
+async function loadPublicData(){
+  try {
+    const [pubProducts, pubModules, pubFeatures] = await Promise.all([
+      apiFetch('/public/products'),
+      apiFetch('/public/modules'),
+      apiFetch('/public/features'),
+    ]);
+    products = pubProducts;
+    modules = pubModules;
+    features = pubFeatures.map(mapFeatureDates);
+  } catch(e){
+    console.error('Failed to load public roadmap data', e);
+    showToast(e.message || 'Could not load the roadmap');
+  }
+}
+
+async function loadWorkspaceData(){
+  try {
+    const [allProducts, allModules, allFeatures, allUsers] = await Promise.all([
+      apiFetch('/products'),
+      apiFetch('/modules'),
+      apiFetch('/features'),
+      apiFetch('/users'),
+    ]);
+    products = allProducts;
+    modules = allModules;
+    features = allFeatures.map(mapFeatureDates);
+    users = allUsers;
+  } catch(e){
+    console.error('Failed to load workspace data', e);
+    showToast(e.message || 'Could not load the latest data');
+  }
+}
+
+/* ---- Auth ---- */
+doLogin = async function(){
+  const emailEl = document.getElementById('login-email');
+  const passEl = document.getElementById('login-password');
+  const email = emailEl ? emailEl.value.trim() : '';
+  const password = passEl ? passEl.value : '';
+  if(!email || !password){ showToast('Enter your email and password'); return; }
+  try {
+    const data = await apiFetch('/auth/login', { method:'POST', body: JSON.stringify({ email, password }) });
+    authToken = data.accessToken;
+    session.loggedIn = true;
+    session.name = data.user.name;
+    session.role = data.user.role;
+    session.initials = data.user.initials;
+    await loadWorkspaceData();
+    showToast('Welcome back, ' + session.name.split(' ')[0] + '.');
+    go('dashboard');
+  } catch(e){
+    showToast(e.message || 'Login failed — check your email and password');
+  }
+};
+doLogout = async function(){
+  authToken = null;
+  session.loggedIn = false;
+  closeAllDD();
+  await loadPublicData();
+  go('landing');
+};
+
+/* ---- Features ---- */
+submitFeature = async function(){
+  if(!canEdit()){ showToast('Viewers cannot edit features'); return; }
+  const title = document.getElementById('nf-title').value.trim();
+  if(!title){ showToast('Give the feature a title first'); return; }
+  const editId = document.getElementById('nf-edit-id').value;
+  const status = document.getElementById('nf-status').value;
+  const parentSelect = document.getElementById('nf-parent-select');
+  const selectedParentId = parentSelect ? parentSelect.value : document.getElementById('nf-parent').value;
+  let productId = document.getElementById('nf-product').value;
+  let moduleId = document.getElementById('nf-module').value || null;
+  if(selectedParentId){
+    const parent = featureById(selectedParentId);
+    if(parent){ productId = parent.productId; moduleId = parent.moduleId || null; }
+  }
+  const payload = {
+    productId, moduleId, parentId: selectedParentId || null,
+    title, description: document.getElementById('nf-description').value.trim(),
+    status, progress: +document.getElementById('nf-progress').value,
+    priority: +document.getElementById('nf-priority').value,
+    startDate: document.getElementById('nf-start').value || null,
+    endDate: document.getElementById('nf-end').value || null,
+    relaunchDate: status==='POSTPONED' ? (document.getElementById('nf-relaunch').value || null) : null,
+    owner: document.getElementById('nf-owner').value || 'Unassigned',
+    visibility: document.getElementById('nf-visibility').value,
+  };
+  try {
+    if(editId){
+      await apiFetch('/features/'+editId, { method:'PATCH', body: JSON.stringify(payload) });
+      showToast('Feature updated');
+    } else {
+      await apiFetch('/features', { method:'POST', body: JSON.stringify(payload) });
+      showToast('Feature created');
+    }
+    closeModal();
+    await loadWorkspaceData();
+    go(document.querySelector('.view.active').id.replace('view-',''));
+  } catch(e){ showToast(e.message || 'Could not save the feature'); }
+};
+deleteFeature = async function(id){
+  if(!canEdit()){ showToast('Viewers cannot delete features'); return; }
+  try {
+    await apiFetch('/features/'+id, { method:'DELETE' });
+    closeDrawer();
+    await loadWorkspaceData();
+    go(document.querySelector('.view.active').id.replace('view-',''));
+    showToast('Feature deleted');
+  } catch(e){ showToast(e.message || 'Could not delete the feature'); }
+};
+
+/* ---- Modules ---- */
+submitModule = async function(){
+  if(!canEdit()){ showToast('Viewers cannot edit modules'); return; }
+  const name = document.getElementById('nm-name').value.trim();
+  if(!name){ showToast('Give the module a name first'); return; }
+  const editId = document.getElementById('nm-edit-id').value;
+  const activeEl = document.getElementById('nm-active');
+  const active = activeEl ? activeEl.checked : true;
+  const productId = document.getElementById('nm-product').value;
+  try {
+    if(editId){
+      await apiFetch('/modules/'+editId, { method:'PATCH', body: JSON.stringify({ name, active }) });
+      showToast('Module updated');
+    } else {
+      await apiFetch('/modules', { method:'POST', body: JSON.stringify({ productId, name }) });
+      showToast('Module created');
+    }
+    closeModal();
+    await loadWorkspaceData();
+    go(document.querySelector('.view.active').id.replace('view-',''));
+  } catch(e){ showToast(e.message || 'Could not save the module'); }
+};
+toggleModuleActive = async function(id){
+  const m = moduleById(id);
+  const newActive = m.active===false;
+  try {
+    await apiFetch('/modules/'+id, { method:'PATCH', body: JSON.stringify({ active:newActive }) });
+    await loadWorkspaceData();
+    renderModulesTable(); renderBoard('int'); renderBoard('pub'); renderBoard('ft');
+    showToast(m.name + (newActive?' activated':' made inactive'));
+  } catch(e){ showToast(e.message || 'Could not update the module'); }
+};
+deleteModule = async function(id){
+  if(!canEdit()){ showToast('Viewers cannot delete modules'); return; }
+  const count = features.filter(f=>f.moduleId===id).length;
+  if(count){ showToast('Delete all features under this module first'); return; }
+  try {
+    await apiFetch('/modules/'+id, { method:'DELETE' });
+    await loadWorkspaceData();
+    renderModulesTable(); renderBoard('int');
+    showToast('Module deleted');
+  } catch(e){ showToast(e.message || 'Could not delete the module'); }
+};
+
+/* ---- Products ---- */
+submitProduct = async function(){
+  if(!canEdit()){ showToast('Viewers cannot create products'); return; }
+  const name = document.getElementById('np-name').value.trim();
+  if(!name){ showToast('Give the product a name first'); return; }
+  const payload = {
+    name,
+    description: document.getElementById('np-desc').value || 'No description yet.',
+    color: document.getElementById('np-color').value,
+    visibility: document.getElementById('np-visibility').value,
+  };
+  try {
+    await apiFetch('/products', { method:'POST', body: JSON.stringify(payload) });
+    closeModal();
+    await loadWorkspaceData();
+    showToast('Product created');
+    go('products');
+  } catch(e){ showToast(e.message || 'Could not create the product'); }
+};
+toggleProductVisibility = async function(id){
+  try {
+    await apiFetch('/products/'+id+'/toggle-visibility', { method:'PATCH' });
+    await loadWorkspaceData();
+    renderInternalProducts();
+    showToast('Visibility updated');
+  } catch(e){ showToast(e.message || 'Could not update visibility'); }
+};
+deleteProduct = async function(id){
+  if(!canEdit()){ showToast('Viewers cannot delete products'); return; }
+  if(features.some(f=>f.productId===id)){ showToast('Delete this product features first'); return; }
+  try {
+    await apiFetch('/products/'+id, { method:'DELETE' });
+    await loadWorkspaceData();
+    renderInternalProducts();
+    showToast('Product deleted');
+  } catch(e){ showToast(e.message || 'Could not delete the product'); }
+};
+
+/* ---- Users ---- */
+submitUser = async function(){
+  const name = document.getElementById('nu-name').value.trim();
+  const email = document.getElementById('nu-email').value.trim();
+  if(!name || !email){ showToast('Name and email are required'); return; }
+  const role = document.getElementById('nu-role').value;
+  try {
+    const result = await apiFetch('/users', { method:'POST', body: JSON.stringify({ name, email, role }) });
+    closeModal();
+    await loadWorkspaceData();
+    showToast(result.tempPassword ? ('User created — temp password: ' + result.tempPassword) : ('Invite sent to ' + email));
+    renderUsersTable();
+  } catch(e){ showToast(e.message || 'Could not invite the user'); }
+};
+
+/* ---- Bootstrap: load the public roadmap before showing the landing page ---- */
+loadPublicData().then(()=>{ go('landing'); lucide.createIcons(); });
+</script>
+</body>
+</html>
+
+
+
