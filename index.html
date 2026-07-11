@@ -333,9 +333,14 @@
   .module-table-name .module-cell-btn{ font-weight:700; }
   .inactive-module-badge{ display:inline-flex; align-items:center; border-radius:999px; padding:2px 7px; margin-left:6px; background:#F1F5F9; color:#64748B; font-size:11px; font-weight:800; vertical-align:middle; }
 
+.rm-loading-overlay{ position:fixed; inset:0; background:rgba(10,12,20,0.35); z-index:9999; display:none; align-items:center; justify-content:center; backdrop-filter:blur(1px); }
+.rm-loading-overlay.active{ display:flex; }
+.rm-spinner{ width:40px; height:40px; border-radius:50%; border:3px solid rgba(255,255,255,0.25); border-top-color:#2E63F6; animation:rm-spin 0.7s linear infinite; }
+@keyframes rm-spin{ to{ transform:rotate(360deg); } }
 </style>
 </head>
 <body>
+<div class="rm-loading-overlay" id="rm-loading-overlay"><div class="rm-spinner"></div></div>
 
 <!-- ================= LANDING (public) ================= -->
 <section class="view active" id="view-landing">
@@ -703,8 +708,8 @@ let dashFilter = { product:'all', period:'year' };
 let landingExpanded = false, internalProductsExpanded = false;
 
 const ZOOM_WIDTH = { month:220, quarter:130, year:60 };
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun'];
-const YEAR = 2026;
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const YEAR = new Date().getFullYear();
 
 function fmtDate(d){ if(!d) return '?'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 function productById(id){ return products.find(p=>p.id===id); }
@@ -2038,20 +2043,37 @@ document.addEventListener('DOMContentLoaded', ()=>{ const d=document.getElementB
 ================================================================== */
 const API_BASE = 'https://rodie-map-backend.onrender.com/api';
 let authToken = null;
+let rmLoadingCount = 0;
+
+function showLoading(){
+  rmLoadingCount++;
+  const el = document.getElementById('rm-loading-overlay');
+  if(el) el.classList.add('active');
+}
+function hideLoading(){
+  rmLoadingCount = Math.max(0, rmLoadingCount-1);
+  if(rmLoadingCount===0){
+    const el = document.getElementById('rm-loading-overlay');
+    if(el) el.classList.remove('active');
+  }
+}
 
 async function apiFetch(path, options){
   options = options || {};
+  showLoading();
   const headers = Object.assign({ 'Content-Type':'application/json' }, options.headers||{});
   if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
   let res;
   try {
     res = await fetch(API_BASE + path, Object.assign({}, options, { headers }));
   } catch(networkErr){
+    hideLoading();
     throw new Error('Could not reach the server. It may be waking up (free tier) — try again in a moment.');
   }
   let data = null;
   const ct = res.headers.get('content-type') || '';
   if(ct.includes('application/json')){ data = await res.json().catch(()=>null); }
+  hideLoading();
   if(!res.ok){
     const msg = data && data.message ? data.message : (res.statusText || 'Request failed');
     throw new Error(Array.isArray(msg) ? msg.join(', ') : msg);
@@ -2282,11 +2304,23 @@ submitUser = async function(){
   try {
     const result = await apiFetch('/users', { method:'POST', body: JSON.stringify({ name, email, role }) });
     users.push(result);
-    closeModal();
-    showToast(result.emailSent ? ('Invite emailed to ' + email) : ('User created — email not sent (check RESEND_API_KEY)'));
     renderUsersTable();
-  } catch(e){ showToast(e.message || 'Could not invite the user'); }
+    showUserCreatedModal(result);
+  } catch(e){ showToast(e.message || 'Could not create the user'); }
 };
+function showUserCreatedModal(user){
+  const first = (user.name||'').split(' ')[0] || 'them';
+  openModal(`<button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button><h2>User created</h2><div class="sub">Share these details with ${first} so they can log in. This password won't be shown again.</div><div class="field"><label>Name</label><input value="${(user.name||'').replace(/"/g,'&quot;')}" readonly></div><div class="field"><label>Email</label><input value="${(user.email||'').replace(/"/g,'&quot;')}" readonly></div><div class="field"><label>Role</label><input value="${roleLabel(user.role)}" readonly></div><div class="field"><label>Temporary password</label><div style="display:flex; gap:8px;"><input id="new-user-pass" value="${(user.tempPassword||'').replace(/"/g,'&quot;')}" readonly style="flex:1;"><button class="btn btn-ghost" onclick="copyNewUserPassword()">Copy</button></div></div><div class="modal-actions"><button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="closeModal()">Done</button></div>`);
+}
+function copyNewUserPassword(){
+  const el = document.getElementById('new-user-pass'); if(!el) return;
+  el.select(); el.setSelectionRange(0, 99999);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(el.value).then(()=>showToast('Password copied')).catch(()=>showToast('Could not copy — select and copy manually'));
+  } else {
+    try { document.execCommand('copy'); showToast('Password copied'); } catch(e){ showToast('Could not copy — select and copy manually'); }
+  }
+}
 
 /* ---- Bootstrap: load the public roadmap before showing the landing page ---- */
 loadPublicData().then(()=>{ go('landing'); lucide.createIcons(); });
