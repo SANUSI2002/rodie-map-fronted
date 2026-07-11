@@ -2117,16 +2117,37 @@ function mapFeatureDates(f){
   });
 }
 
+// Applies the shared brand color / display depth / date-display settings for everyone,
+// so a Super Admin's change shows up on every device, not just their own.
+function applyGlobalSettings(s){
+  if(!s) return;
+  document.documentElement.style.setProperty('--blue', s.brandColor || '#2E63F6');
+  displayDepth = {
+    modules: s.showModules !== false,
+    level1: s.showLevel1 !== false,
+    level2: s.showLevel2 !== false,
+    level3: s.showLevel3 !== false,
+  };
+  showExactDates = !!s.showExactDates;
+  const colorInput = document.getElementById('set-color'); if(colorInput) colorInput.value = s.brandColor || '#2E63F6';
+  const dm = document.getElementById('depth-modules'); if(dm) dm.checked = displayDepth.modules;
+  const d2 = document.getElementById('depth-level2'); if(d2) d2.checked = displayDepth.level2;
+  const d3 = document.getElementById('depth-level3'); if(d3) d3.checked = displayDepth.level3;
+  const ed = document.getElementById('set-exact-dates'); if(ed) ed.checked = showExactDates;
+}
+
 async function loadPublicData(){
   try {
-    const [pubProducts, pubModules, pubFeatures] = await Promise.all([
+    const [pubProducts, pubModules, pubFeatures, pubSettings] = await Promise.all([
       apiFetch('/public/products'),
       apiFetch('/public/modules'),
       apiFetch('/public/features'),
+      apiFetch('/public/settings'),
     ]);
     products = pubProducts;
     modules = pubModules;
     features = pubFeatures.map(mapFeatureDates);
+    applyGlobalSettings(pubSettings);
   } catch(e){
     console.error('Failed to load public roadmap data', e);
     showToast(e.message || 'Could not load the roadmap');
@@ -2135,16 +2156,18 @@ async function loadPublicData(){
 
 async function loadWorkspaceData(){
   try {
-    const [allProducts, allModules, allFeatures, allUsers] = await Promise.all([
+    const [allProducts, allModules, allFeatures, allUsers, allSettings] = await Promise.all([
       apiFetch('/products'),
       apiFetch('/modules'),
       apiFetch('/features'),
       apiFetch('/users'),
+      apiFetch('/settings'),
     ]);
     products = allProducts;
     modules = allModules;
     features = allFeatures.map(mapFeatureDates);
     users = allUsers;
+    applyGlobalSettings(allSettings);
   } catch(e){
     console.error('Failed to load workspace data', e);
     showToast(e.message || 'Could not load the latest data');
@@ -2383,6 +2406,25 @@ function copyNewUserPassword(){
     try { document.execCommand('copy'); showToast('Password copied'); } catch(e){ showToast('Could not copy — select and copy manually'); }
   }
 }
+
+/* ---- Settings (global, Super Admin only) ---- */
+saveSettings = async function(){
+  if(session.role !== 'SUPER_ADMIN'){ showToast('Only Super Admins can change settings for everyone'); return; }
+  const payload = {
+    brandColor: document.getElementById('set-color').value,
+    showModules: document.getElementById('depth-modules').checked,
+    showLevel1: true,
+    showLevel2: document.getElementById('depth-level2').checked,
+    showLevel3: document.getElementById('depth-level3').checked,
+    showExactDates: document.getElementById('set-exact-dates').checked,
+  };
+  try {
+    const saved = await apiFetch('/settings', { method:'PATCH', body: JSON.stringify(payload) });
+    applyGlobalSettings(saved);
+    showToast('Settings saved for everyone');
+    renderBoard('pub');
+  } catch(e){ showToast(e.message || 'Could not save settings'); }
+};
 
 /* ---- Bootstrap: load the public roadmap before showing the landing page ---- */
 loadPublicData().then(async ()=>{
