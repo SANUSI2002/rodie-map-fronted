@@ -2688,8 +2688,8 @@ window.addEventListener('resize', function(){
   }, 150);
 });
 
-/* ---- Feature CSV import ---- */
-const IMPORT_HEADERS = ['Feature','Product','Module','Description','Status','Priority','Progress','Start Date (YYYY-MM-DD)','End Date (YYYY-MM-DD)','Visibility'];
+/* ---- Feature CSV import (simple: just Product + Feature) ---- */
+const IMPORT_HEADERS = ['Product','Feature'];
 let importParsedRows = [];
 
 function parseCSV(text){
@@ -2713,8 +2713,13 @@ function parseCSV(text){
 }
 
 function downloadImportTemplate(){
-  const example = ['Push notification preferences','ALAT Mobile Banking','Notifications','Optional description of the feature','PLANNED','3','0','2026-08-01','2026-09-15','PRIVATE'];
-  const csv = IMPORT_HEADERS.join(',') + '\n' + example.map(v=>`"${v.replace(/"/g,'""')}"`).join(',');
+  // Shows a product listed across multiple rows - one row per feature, same product repeated.
+  const firstProduct = products[0] ? products[0].name : 'ALAT Mobile Banking';
+  const rows = [
+    [firstProduct, 'Push notification preferences'],
+    [firstProduct, 'Biometric login'],
+  ];
+  const csv = IMPORT_HEADERS.join(',') + '\n' + rows.map(r=>r.map(v=>`"${v.replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type:'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'roadimap-feature-import-template.csv';
@@ -2726,7 +2731,7 @@ function openImportModal(){
   openModal(`
     <button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     <h2>Import features from CSV</h2>
-    <div class="sub">Only <b>Feature</b> and <b>Product</b> are required — everything else is optional. Dates must be <b>YYYY-MM-DD</b>. Product and Module names must match existing ones exactly (case-insensitive).</div>
+    <div class="sub">Just two columns: <b>Product</b> and <b>Feature</b>. A product can appear on as many rows as you like — one row per feature. Product names must match an existing product exactly (case-insensitive). Everything else (status, priority, dates) defaults to standard values and can be edited afterward.</div>
     <button class="btn btn-ghost" style="margin-bottom:16px;" onclick="downloadImportTemplate()"><i data-lucide="download" style="width:14px;height:14px;"></i> Download CSV template</button>
     <div class="field"><label>CSV file</label><input type="file" id="import-file-input" accept=".csv" onchange="handleImportFileSelect(this)"></div>
     <div id="import-preview"></div>
@@ -2741,63 +2746,24 @@ function handleImportFileSelect(input){
     const rows = parseCSV(String(e.target.result || ''));
     if(rows.length < 2){ showToast('The file has no data rows'); return; }
     const header = rows[0].map(h=>h.trim().toLowerCase());
-    const idx = {
-      title: header.indexOf('feature'),
-      product: header.indexOf('product'),
-      module: header.indexOf('module'),
-      description: header.indexOf('description'),
-      status: header.indexOf('status'),
-      priority: header.indexOf('priority'),
-      progress: header.indexOf('progress'),
-      startDate: header.findIndex(h=>h.startsWith('start date')),
-      endDate: header.findIndex(h=>h.startsWith('end date')),
-      visibility: header.indexOf('visibility'),
-    };
-    if(idx.title===-1 || idx.product===-1){ showToast('The CSV must have "Feature" and "Product" columns'); return; }
+    const idx = { product: header.indexOf('product'), title: header.indexOf('feature') };
+    if(idx.title===-1 || idx.product===-1){ showToast('The CSV must have "Product" and "Feature" columns'); return; }
 
-    const validStatuses = Object.keys(STATUS_LABELS);
     const dataRows = rows.slice(1);
     importParsedRows = dataRows.map((cols, i)=>{
-      const get = k => idx[k]>-1 ? (cols[idx[k]]||'').trim() : '';
-      const title = get('title'), productName = get('product');
+      const productName = (cols[idx.product]||'').trim();
+      const title = (cols[idx.title]||'').trim();
       const errors = [];
-      let productMatch = null, moduleMatch = null;
+      let productMatch = null;
       if(!title) errors.push('Missing feature name');
       if(!productName) errors.push('Missing product name');
       if(productName){
         productMatch = products.find(p=>p.name.toLowerCase()===productName.toLowerCase());
         if(!productMatch) errors.push(`Product "${productName}" does not exist`);
       }
-      const moduleName = get('module');
-      if(moduleName && productMatch){
-        moduleMatch = modules.find(m=>m.productId===productMatch.id && m.name.toLowerCase()===moduleName.toLowerCase());
-        if(!moduleMatch) errors.push(`Module "${moduleName}" does not exist under "${productName}"`);
-      }
-      const statusRaw = get('status').toUpperCase().replace(/\s+/g,'_');
-      const status = statusRaw ? (validStatuses.includes(statusRaw) ? statusRaw : null) : 'NO_STATUS';
-      if(get('status') && !status) errors.push(`Status "${get('status')}" is not valid`);
-      const priorityRaw = get('priority');
-      let priority = 3;
-      if(priorityRaw){ priority = parseInt(priorityRaw,10); if(isNaN(priority) || priority<1 || priority>5) errors.push(`Priority "${priorityRaw}" must be 1-5`); }
-      const progressRaw = get('progress');
-      let progress = 0;
-      if(progressRaw){ progress = parseInt(progressRaw,10); if(isNaN(progress) || progress<0 || progress>100) errors.push(`Progress "${progressRaw}" must be 0-100`); }
-      const dateRe = /^\d{4}-\d{2}-\d{2}$/;
-      const startDate = get('startDate'), endDate = get('endDate');
-      if(startDate && !dateRe.test(startDate)) errors.push(`Start date "${startDate}" must be YYYY-MM-DD`);
-      if(endDate && !dateRe.test(endDate)) errors.push(`End date "${endDate}" must be YYYY-MM-DD`);
-      if(startDate && endDate && dateRe.test(startDate) && dateRe.test(endDate) && endDate < startDate) errors.push('End date is before start date');
-      const visibilityRaw = get('visibility').toUpperCase();
-      const visibility = visibilityRaw ? (['PUBLIC','PRIVATE'].includes(visibilityRaw) ? visibilityRaw : null) : 'PRIVATE';
-      if(get('visibility') && !visibility) errors.push(`Visibility "${get('visibility')}" must be PUBLIC or PRIVATE`);
-
       return {
         rowNum: i+2, title, valid: errors.length===0, errors,
-        payload: errors.length===0 ? {
-          productId: productMatch.id, moduleId: moduleMatch ? moduleMatch.id : null,
-          title, description: get('description'), status: status || 'NO_STATUS', priority, progress,
-          startDate: startDate || null, endDate: endDate || null, visibility: visibility || 'PRIVATE',
-        } : null,
+        payload: errors.length===0 ? { productId: productMatch.id, title } : null,
       };
     });
     renderImportPreview();
