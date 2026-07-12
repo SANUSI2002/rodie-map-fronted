@@ -1440,7 +1440,11 @@ function openFeatureModal(prefill){
       <div class="field"><label>End date</label><input id="nf-end" type="date" value="${cur.endDate||''}" onchange="validateFeatureDates()"></div>
     </div>
     <div id="nf-date-error" style="display:none; color:#EF4444; font-size:12.5px; margin:-10px 0 14px;">End date can't be earlier than the start date.</div>
-    <div class="field" id="nf-relaunch-wrap" style="display:${cur.status==='POSTPONED'?'block':'none'};"><label>New launch date (postponed to)</label><input id="nf-relaunch" type="date" value="${cur.relaunchDate||''}"></div>
+    <input type="hidden" id="nf-relaunch" value="${cur.relaunchDate||''}">
+    <div class="field" id="nf-relaunch-line" style="display:${cur.status==='POSTPONED'?'flex':'none'}; align-items:center; justify-content:space-between; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:10px 12px; margin-bottom:16px;">
+      <span style="font-size:13px; color:#92400E;">New launch date: <b id="nf-relaunch-line-val">${cur.relaunchDate ? fmtDate(cur.relaunchDate) : 'Not set'}</b></span>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="promptRelaunchDate()">Change</button>
+    </div>
     <input type="hidden" id="nf-release-date" value="${cur.releaseDate || (cur.status==='RELEASED' ? (cur.endDate||todayStr) : '')}">
     <div class="field" id="nf-release-line" style="display:${cur.status==='RELEASED'?'flex':'none'}; align-items:center; justify-content:space-between; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:10px 12px; margin-bottom:16px;">
       <span style="font-size:13px; color:#166534;">Release date: <b id="nf-release-line-val">${fmtDate(cur.releaseDate || cur.endDate || todayStr)}</b></span>
@@ -1493,9 +1497,38 @@ function validateFeatureDates(){
   if(btnEl) btnEl.disabled = invalid;
   return !invalid;
 }
+function promptRelaunchDate(){
+  const hidden = document.getElementById('nf-relaunch');
+  const inTwoWeeks = new Date(); inTwoWeeks.setDate(inTwoWeeks.getDate()+14);
+  const pickVal = (hidden && hidden.value) || inTwoWeeks.toISOString().slice(0,10);
+  openReleasePopup(`
+    <div style="text-align:center; padding:4px 6px 2px;">
+      <div style="width:48px; height:48px; border-radius:50%; background:#FFFBEB; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+        <i data-lucide="clock" style="width:22px;height:22px;color:#F59E0B;"></i>
+      </div>
+      <h2 style="margin-bottom:6px;">Set the new launch date</h2>
+      <div class="sub" style="margin-bottom:20px;">This feature is marked Postponed. When is it now expected to launch?</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <input id="relaunch-popup-date" type="date" value="${pickVal}" style="flex:1;">
+        <button class="btn btn-primary" onclick="confirmRelaunchDate(document.getElementById('relaunch-popup-date').value)">Set date</button>
+      </div>
+    </div>
+  `);
+}
+function confirmRelaunchDate(dateVal){
+  const hidden = document.getElementById('nf-relaunch');
+  if(hidden) hidden.value = dateVal || '';
+  const line = document.getElementById('nf-relaunch-line-val');
+  if(line) line.textContent = dateVal ? fmtDate(dateVal) : 'Not set';
+  closeReleasePopup();
+}
 function onFeatureStatusChange(){
   const status = document.getElementById('nf-status').value;
-  document.getElementById('nf-relaunch-wrap').style.display = status==='POSTPONED' ? 'block' : 'none';
+  const relaunchLine = document.getElementById('nf-relaunch-line');
+  if(relaunchLine){
+    relaunchLine.style.display = status==='POSTPONED' ? 'flex' : 'none';
+    if(status==='POSTPONED') promptRelaunchDate();
+  }
   const releaseLine = document.getElementById('nf-release-line');
   if(releaseLine){
     releaseLine.style.display = status==='RELEASED' ? 'flex' : 'none';
