@@ -678,6 +678,7 @@
 <div class="gantt-tooltip" id="gantt-tooltip"></div>
 <div class="drawer-overlay" id="drawer-overlay"><div class="drawer"><button class="drawer-close icon-btn" onclick="closeDrawer()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button><div id="drawer-body"></div></div></div>
 <div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-box"></div></div>
+<div class="modal-overlay" id="release-popup-overlay"><div class="modal" id="release-popup-box" style="max-width:380px;"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1440,25 +1441,48 @@ function openFeatureModal(prefill){
     </div>
     <div id="nf-date-error" style="display:none; color:#EF4444; font-size:12.5px; margin:-10px 0 14px;">End date can't be earlier than the start date.</div>
     <div class="field" id="nf-relaunch-wrap" style="display:${cur.status==='POSTPONED'?'block':'none'};"><label>New launch date (postponed to)</label><input id="nf-relaunch" type="date" value="${cur.relaunchDate||''}"></div>
-    <div class="field" id="nf-release-wrap" style="display:${cur.status==='RELEASED'?'block':'none'};">
-      <label>Release date</label>
-      <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:500; cursor:pointer; margin-bottom:8px;">
-        <input type="checkbox" id="nf-release-use-end" onchange="onReleaseDateModeChange()" ${(cur.releaseDate && cur.releaseDate===cur.endDate) || !cur.releaseDate ? 'checked' : ''}> Use the end date as the release date
-      </label>
-      <input id="nf-release-date" type="date" value="${cur.releaseDate || cur.endDate || todayStr}">
+    <input type="hidden" id="nf-release-date" value="${cur.releaseDate || (cur.status==='RELEASED' ? (cur.endDate||todayStr) : '')}">
+    <div class="field" id="nf-release-line" style="display:${cur.status==='RELEASED'?'flex':'none'}; align-items:center; justify-content:space-between; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:10px 12px; margin-bottom:16px;">
+      <span style="font-size:13px; color:#166534;">Release date: <b id="nf-release-line-val">${fmtDate(cur.releaseDate || cur.endDate || todayStr)}</b></span>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="promptReleaseDate()">Change</button>
     </div>
     <div class="field"><label>Visibility</label><select id="nf-visibility"><option value="PRIVATE" ${cur.visibility==='PRIVATE'?'selected':''}>Internal</option><option value="PUBLIC" ${cur.visibility==='PUBLIC'?'selected':''}>Public</option></select></div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="nf-submit-btn" onclick="submitFeature()">${editing ? 'Save changes' : 'Create feature'}</button></div>
   `);
   document.getElementById('nf-module').value = cur.moduleId || '';
   validateFeatureDates();
-  onReleaseDateModeChange();
 }
-function onReleaseDateModeChange(){
-  const useEnd = document.getElementById('nf-release-use-end'); const dateEl = document.getElementById('nf-release-date'); const endEl = document.getElementById('nf-end');
-  if(!useEnd || !dateEl) return;
-  if(useEnd.checked){ dateEl.value = endEl.value; dateEl.disabled = true; }
-  else { if(!dateEl.value || dateEl.value===endEl.value) dateEl.value = new Date().toISOString().slice(0,10); dateEl.disabled = false; }
+function openReleasePopup(html){ document.getElementById('release-popup-box').innerHTML = html; document.getElementById('release-popup-overlay').classList.add('open'); lucide.createIcons(); }
+function closeReleasePopup(){ document.getElementById('release-popup-overlay').classList.remove('open'); }
+function promptReleaseDate(){
+  const endEl = document.getElementById('nf-end');
+  const endVal = endEl ? endEl.value : '';
+  const hidden = document.getElementById('nf-release-date');
+  const todayStr = new Date().toISOString().slice(0,10);
+  const pickVal = (hidden && hidden.value && hidden.value !== endVal) ? hidden.value : todayStr;
+  openReleasePopup(`
+    <div style="text-align:center; padding:4px 6px 2px;">
+      <div style="width:48px; height:48px; border-radius:50%; background:#DCFCE7; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+        <i data-lucide="flag" style="width:22px;height:22px;color:#22C55E;"></i>
+      </div>
+      <h2 style="margin-bottom:6px;">Set the release date</h2>
+      <div class="sub" style="margin-bottom:20px;">This feature is marked Released. Use the end date as the release date, or pick a release date.</div>
+      <div style="display:flex; flex-direction:column; gap:10px; text-align:left;">
+        <button class="btn btn-primary" style="justify-content:center;" onclick="confirmReleaseDate('${endVal}')">${endVal ? 'Use end date (' + fmtDate(endVal) + ')' : 'Use end date'}</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input id="release-popup-date" type="date" value="${pickVal}" style="flex:1;">
+          <button class="btn btn-ghost" onclick="confirmReleaseDate(document.getElementById('release-popup-date').value)">Use this date</button>
+        </div>
+      </div>
+    </div>
+  `);
+}
+function confirmReleaseDate(dateVal){
+  const hidden = document.getElementById('nf-release-date');
+  if(hidden) hidden.value = dateVal || '';
+  const line = document.getElementById('nf-release-line-val');
+  if(line) line.textContent = dateVal ? fmtDate(dateVal) : 'Not set';
+  closeReleasePopup();
 }
 function validateFeatureDates(){
   const startEl = document.getElementById('nf-start'), endEl = document.getElementById('nf-end');
@@ -1467,20 +1491,15 @@ function validateFeatureDates(){
   const invalid = !!(startEl.value && endEl.value && endEl.value < startEl.value);
   if(errEl) errEl.style.display = invalid ? 'block' : 'none';
   if(btnEl) btnEl.disabled = invalid;
-  onReleaseDateModeChange();
   return !invalid;
 }
 function onFeatureStatusChange(){
   const status = document.getElementById('nf-status').value;
   document.getElementById('nf-relaunch-wrap').style.display = status==='POSTPONED' ? 'block' : 'none';
-  const releaseWrap = document.getElementById('nf-release-wrap');
-  if(releaseWrap){
-    releaseWrap.style.display = status==='RELEASED' ? 'block' : 'none';
-    if(status==='RELEASED'){
-      const dateEl = document.getElementById('nf-release-date');
-      if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
-      onReleaseDateModeChange();
-    }
+  const releaseLine = document.getElementById('nf-release-line');
+  if(releaseLine){
+    releaseLine.style.display = status==='RELEASED' ? 'flex' : 'none';
+    if(status==='RELEASED') promptReleaseDate();
   }
   // Auto-fill progress to 100 when marking released, but leave user free to change it.
   if(status==='RELEASED'){ document.getElementById('nf-progress').value = 100; document.getElementById('nf-progress-val').textContent = '100'; }
