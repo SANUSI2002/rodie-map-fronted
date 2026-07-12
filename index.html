@@ -1782,10 +1782,25 @@ function renderUsersTable(){
       <td>${u.email}</td><td><span class="role-badge">${u.role.replace(/_/g,' ')}</span></td>
       <td>${u.active?'Active':'Disabled'}</td>
       <td><label class="toggle ${u.active?'on':''}" onclick="toggleUserActive('${u.id}', ${u.active})"><div class="toggle-track"></div></label></td>
-      <td>${isSuperAdmin ? `<button class="icon-btn" title="Delete user" onclick="deleteUser('${u.id}','${(u.name||'').replace(/"/g,'&quot;')}')"><i data-lucide="trash-2" style="width:14px;height:14px;color:#EF4444;"></i></button>` : ''}</td>
+      <td>${isSuperAdmin ? `
+        <div class="dd" onclick="event.stopPropagation();">
+          <button class="icon-btn" onclick="toggleDD('user-actions-${u.id}')" title="More actions"><i data-lucide="more-horizontal" style="width:16px;height:16px;"></i></button>
+          <div class="dd-panel right" id="user-actions-${u.id}" style="width:180px; padding:6px;">
+            <a class="avatar-menu-item" onclick="closeAllDD(); resetUserPassword('${u.id}','${(u.name||'').replace(/"/g,'&quot;')}')"><i data-lucide="key-round" style="width:14px;height:14px;"></i>Reset password</a>
+            <a class="avatar-menu-item" onclick="closeAllDD(); deleteUser('${u.id}','${(u.name||'').replace(/"/g,'&quot;')}')" style="color:#EF4444;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i>Delete</a>
+          </div>
+        </div>
+      ` : ''}</td>
     </tr>`).join('');
   lucide.createIcons();
 }
+resetUserPassword = async function(id, name){
+  if(!(await confirmDialog(`Reset the password for ${name}? They'll need the new password to log in.`, { title:'Reset password?', confirmLabel:'Reset' }))) return;
+  try {
+    const result = await apiFetch('/users/'+id+'/reset-password', { method:'PATCH' });
+    showUserCreatedModal(Object.assign({}, result, { name }), { title:'Password reset', intro:`Share this new password with ${name.split(' ')[0]}. It won't be shown again.` });
+  } catch(e){ showToast(e.message || 'Could not reset the password'); }
+};
 toggleUserActive = async function(id, currentActive){
   try {
     const saved = await apiFetch('/users/'+id, { method:'PATCH', body: JSON.stringify({ active: !currentActive }) });
@@ -1893,6 +1908,7 @@ buildTopbars = function(){
         <div class="dd"><div class="avatar" onclick="toggleDD('avatar-panel-${v}')">${session.initials}</div>
           <div class="dd-panel right avatar-menu" id="avatar-panel-${v}">
             <div class="who"><b>${session.name}</b><span>${roleLabel(session.role)}</span></div>
+            <a onclick="closeAllDD(); openChangePasswordModal()"><i data-lucide="key-round" style="width:14px;height:14px;"></i>Change password</a>
             ${isSuperAdmin()?`<a onclick="go('settings')"><i data-lucide="settings" style="width:14px;height:14px;"></i>Settings</a>`:''}
             <a onclick="doLogout()"><i data-lucide="log-out" style="width:14px;height:14px;"></i>Logout</a>
           </div></div>
@@ -2587,9 +2603,13 @@ submitUser = async function(){
     showUserCreatedModal(result);
   } catch(e){ showToast(e.message || 'Could not create the user'); }
 };
-function showUserCreatedModal(user){
+function showUserCreatedModal(user, opts){
+  opts = opts || {};
   const first = (user.name||'').split(' ')[0] || 'them';
-  openModal(`<button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button><h2>User created</h2><div class="sub">Share these details with ${first} so they can log in. This password won't be shown again.</div><div class="field"><label>Name</label><input value="${(user.name||'').replace(/"/g,'&quot;')}" readonly></div><div class="field"><label>Email</label><input value="${(user.email||'').replace(/"/g,'&quot;')}" readonly></div><div class="field"><label>Role</label><input value="${roleLabel(user.role)}" readonly></div><div class="field"><label>Temporary password</label><div style="display:flex; gap:8px;"><input id="new-user-pass" value="${(user.tempPassword||'').replace(/"/g,'&quot;')}" readonly style="flex:1;"><button class="btn btn-ghost" onclick="copyNewUserPassword()">Copy</button></div></div><div class="modal-actions"><button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="closeModal()">Done</button></div>`);
+  const title = opts.title || 'User created';
+  const intro = opts.intro || `Share these details with ${first} so they can log in. This password won't be shown again.`;
+  const roleRow = user.role ? `<div class="field"><label>Role</label><input value="${roleLabel(user.role)}" readonly></div>` : '';
+  openModal(`<button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button><h2>${title}</h2><div class="sub">${intro}</div><div class="field"><label>Name</label><input value="${(user.name||'').replace(/"/g,'&quot;')}" readonly></div>${user.email?`<div class="field"><label>Email</label><input value="${(user.email||'').replace(/"/g,'&quot;')}" readonly></div>`:''}${roleRow}<div class="field"><label>${opts.title ? 'New password' : 'Temporary password'}</label><div style="display:flex; gap:8px;"><input id="new-user-pass" value="${(user.tempPassword||'').replace(/"/g,'&quot;')}" readonly style="flex:1;"><button class="btn btn-ghost" onclick="copyNewUserPassword()">Copy</button></div></div><div class="modal-actions"><button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="closeModal()">Done</button></div>`);
 }
 function copyNewUserPassword(){
   const el = document.getElementById('new-user-pass'); if(!el) return;
@@ -2599,6 +2619,31 @@ function copyNewUserPassword(){
   } else {
     try { document.execCommand('copy'); showToast('Password copied'); } catch(e){ showToast('Could not copy — select and copy manually'); }
   }
+}
+
+/* ---- Self-service password change ---- */
+function openChangePasswordModal(){
+  openModal(`
+    <button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2>Change password</h2><div class="sub">Enter your current password, then choose a new one.</div>
+    <div class="field"><label>Current password</label><input id="cp-current" type="password"></div>
+    <div class="field"><label>New password</label><input id="cp-new" type="password"></div>
+    <div class="field"><label>Confirm new password</label><input id="cp-confirm" type="password"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="submitChangePassword()">Change password</button></div>
+  `);
+}
+async function submitChangePassword(){
+  const currentPassword = document.getElementById('cp-current').value;
+  const newPassword = document.getElementById('cp-new').value;
+  const confirmPassword = document.getElementById('cp-confirm').value;
+  if(!currentPassword || !newPassword){ showToast('Fill in both password fields'); return; }
+  if(newPassword.length < 6){ showToast('New password must be at least 6 characters'); return; }
+  if(newPassword !== confirmPassword){ showToast('New passwords do not match'); return; }
+  try {
+    await apiFetch('/users/me/password', { method:'PATCH', body: JSON.stringify({ currentPassword, newPassword }) });
+    closeModal();
+    showToast('Password changed');
+  } catch(e){ showToast(e.message || 'Could not change your password'); }
 }
 
 /* ---- Settings (global, Super Admin only) ---- */
