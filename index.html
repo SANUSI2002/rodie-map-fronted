@@ -140,7 +140,7 @@
   .rm-main{ flex:1; min-width:0; }
 
   .gantt-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; }
-  .gantt-scroll{ display:flex; overflow-x:hidden; }
+  .gantt-scroll{ display:flex; overflow-x:auto; }
   .gantt-fixed{ width:270px; flex-shrink:0; border-right:1px solid var(--border); position:sticky; left:0; background:var(--surface); z-index:5; }
   .gantt-timeline{ flex:1; min-width:0; }
   .gantt-head-row{ height:46px; border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; font-size:11.5px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
@@ -1104,9 +1104,10 @@ function renderGanttView(scope, publicOnly){
   if(groups.length===0){ fixedEl.innerHTML=''; headEl.innerHTML=''; laneEl.innerHTML = `<div class="empty-state">No features match the current filters.</div>`; return; }
 
   const timelineEl = headEl.parentElement;
-  // Whole window always fits the available width exactly - no horizontal scrolling, ever.
-  const totalWidth = Math.max((timelineEl && timelineEl.clientWidth) || 0, 480) || Math.max(window.innerWidth - 420, 480);
-  const colWidth = totalWidth / win.cols.length;
+  const available = Math.max((timelineEl && timelineEl.clientWidth) || 0, 0) || Math.max(window.innerWidth - 420, 480);
+  const minColWidth = { year: 90, quarter: 70, month: 46 }[zoomState[scope]] || 90;
+  const colWidth = Math.max(available / win.cols.length, minColWidth);
+  const totalWidth = colWidth * win.cols.length;
 
   let fixedHtml='', laneHtml='', rowCount=0;
   groups.forEach(g=>{
@@ -2006,7 +2007,11 @@ function toggleModuleTree(scope, moduleId){
   collapsedModuleTreeIds.has(key) ? collapsedModuleTreeIds.delete(key) : collapsedModuleTreeIds.add(key);
   renderModuleSidebar(scope);
 }
-function toggleModuleSidebar(scope){ moduleSidebarCollapsed[scope] = !moduleSidebarCollapsed[scope]; renderModuleSidebar(scope); }
+function toggleModuleSidebar(scope){
+  moduleSidebarCollapsed[scope] = !moduleSidebarCollapsed[scope];
+  renderModuleSidebar(scope);
+  if(boardView[scope]==='gantt') setTimeout(()=>renderGanttView(scope, scope==='pub'), 220);
+}
 
 renderBoard = function(scope){
   const publicOnly = scope==='pub'; viewingPublic = publicOnly;
