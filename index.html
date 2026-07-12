@@ -585,7 +585,7 @@
     <aside class="sidebar" id="sidebar-products"></aside>
     <div class="main"><div class="topbar" id="topbar-products"></div>
       <div class="content">
-        <div class="page-head"><div><h1>Products</h1></div><div style="display:flex; gap:10px;"><button class="btn btn-ghost" onclick="go('modules')"><i data-lucide="boxes" style="width:15px;height:15px;"></i> Modules</button><button class="btn btn-primary" onclick="openProductModal()">+ Create Product</button></div></div>
+        <div class="page-head"><div><h1>Products</h1></div><div style="display:flex; gap:10px;"><button class="btn btn-ghost" onclick="go('modules')"><i data-lucide="boxes" style="width:15px;height:15px;"></i> Modules</button><button class="btn btn-ghost" onclick="openImportModal()"><i data-lucide="upload" style="width:15px;height:15px;"></i> Import CSV</button><button class="btn btn-primary" onclick="openProductModal()">+ Create Product</button></div></div>
         <div class="product-grid" id="internal-product-grid" style="margin:0; padding:0; max-width:none;"></div>
         <div class="view-more-row" id="internal-view-more" style="margin:20px 0 0; padding:0;"></div>
       </div>
@@ -2731,7 +2731,6 @@ function openImportModal(){
   openModal(`
     <button class="icon-btn modal-close" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     <h2>Import features from CSV</h2>
-    <div class="sub">Just two columns: <b>Product</b> and <b>Feature</b>. A product can appear on as many rows as you like — one row per feature. Product names must match an existing product exactly (case-insensitive). Everything else (status, priority, dates) defaults to standard values and can be edited afterward.</div>
     <button class="btn btn-ghost" style="margin-bottom:16px;" onclick="downloadImportTemplate()"><i data-lucide="download" style="width:14px;height:14px;"></i> Download CSV template</button>
     <div class="field"><label>CSV file</label><input type="file" id="import-file-input" accept=".csv" onchange="handleImportFileSelect(this)"></div>
     <div id="import-preview"></div>
@@ -2754,16 +2753,13 @@ function handleImportFileSelect(input){
       const productName = (cols[idx.product]||'').trim();
       const title = (cols[idx.title]||'').trim();
       const errors = [];
-      let productMatch = null;
       if(!title) errors.push('Missing feature name');
       if(!productName) errors.push('Missing product name');
-      if(productName){
-        productMatch = products.find(p=>p.name.toLowerCase()===productName.toLowerCase());
-        if(!productMatch) errors.push(`Product "${productName}" does not exist`);
-      }
+      const existingProduct = productName ? products.find(p=>p.name.toLowerCase()===productName.toLowerCase()) : null;
       return {
-        rowNum: i+2, title, valid: errors.length===0, errors,
-        payload: errors.length===0 ? { productId: productMatch.id, title } : null,
+        rowNum: i+2, title, productName, existingProduct,
+        valid: errors.length===0, errors,
+        isNewProduct: errors.length===0 && !existingProduct,
       };
     });
     renderImportPreview();
@@ -2774,14 +2770,15 @@ function handleImportFileSelect(input){
 function renderImportPreview(){
   const validCount = importParsedRows.filter(r=>r.valid).length;
   const errorCount = importParsedRows.length - validCount;
+  const newProductCount = new Set(importParsedRows.filter(r=>r.isNewProduct).map(r=>r.productName.toLowerCase())).size;
   const preview = document.getElementById('import-preview');
   preview.innerHTML = `
-    <div style="font-size:13px; margin:6px 0 10px;"><b>${validCount}</b> ready to import${errorCount ? `, <b style="color:#EF4444;">${errorCount}</b> with errors (will be skipped)` : ''}.</div>
+    <div style="font-size:13px; margin:6px 0 10px;"><b>${validCount}</b> ready to import${newProductCount ? ` (including <b>${newProductCount}</b> new product${newProductCount===1?'':'s'} that will be created)` : ''}${errorCount ? `, <b style="color:#EF4444;">${errorCount}</b> with errors (will be skipped)` : ''}.</div>
     <div style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
       ${importParsedRows.map(r=>`
         <div style="display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-bottom:1px solid var(--border-soft); font-size:12.5px;">
           <span style="flex-shrink:0; width:16px;">${r.valid ? '✅' : '❌'}</span>
-          <div><b>Row ${r.rowNum}: ${r.title || '(no title)'}</b>${!r.valid ? `<div style="color:#EF4444; margin-top:2px;">${r.errors.join('; ')}</div>` : ''}</div>
+          <div><b>Row ${r.rowNum}: ${r.title || '(no title)'}</b>${r.isNewProduct ? ` <span style="color:#2E63F6; font-weight:600;">(new product: ${r.productName})</span>` : ''}${!r.valid ? `<div style="color:#EF4444; margin-top:2px;">${r.errors.join('; ')}</div>` : ''}</div>
         </div>
       `).join('')}
     </div>
@@ -2796,16 +2793,30 @@ async function submitImport(){
   if(!validRows.length) return;
   const btn = document.getElementById('import-submit-btn');
   btn.disabled = true; btn.textContent = 'Importing…';
+
+  // Create any new products first (once per unique name), so rows referencing them can resolve.
+  const newProductNames = [...new Set(validRows.filter(r=>r.isNewProduct).map(r=>r.productName))];
+  let productsCreated = 0;
+  for(const name of newProductNames){
+    try {
+      const saved = await apiFetch('/products', { method:'POST', body: JSON.stringify({ name }) });
+      products.push(saved);
+      productsCreated++;
+    } catch(e){ /* rows needing this product will just fail below and count toward "failed" */ }
+  }
+
   let created = 0, failed = 0;
   for(const row of validRows){
+    const product = row.existingProduct || products.find(p=>p.name.toLowerCase()===row.productName.toLowerCase());
+    if(!product){ failed++; continue; }
     try {
-      const saved = mapFeatureDates(await apiFetch('/features', { method:'POST', body: JSON.stringify(row.payload) }));
+      const saved = mapFeatureDates(await apiFetch('/features', { method:'POST', body: JSON.stringify({ productId: product.id, title: row.title }) }));
       features.push(saved);
       created++;
     } catch(e){ failed++; }
   }
   closeModal();
-  showToast(`Imported ${created} feature${created===1?'':'s'}${failed ? `, ${failed} failed` : ''}`);
+  showToast(`Imported ${created} feature${created===1?'':'s'}${productsCreated ? `, created ${productsCreated} new product${productsCreated===1?'':'s'}` : ''}${failed ? `, ${failed} failed` : ''}`);
   go(document.querySelector('.view.active').id.replace('view-',''));
 }
 
