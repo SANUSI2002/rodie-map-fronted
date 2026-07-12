@@ -697,7 +697,7 @@ const FEATURE_COLUMNS = [
 let activeColumns = new Set(FEATURE_COLUMNS.filter(c=>c.default).map(c=>c.key));
 
 let filters = { statuses: new Set(Object.keys(STATUS_COLORS)), priorities: new Set([1,2,3,4,5]), visibility: new Set(['PUBLIC','PRIVATE']), search:'', dateQuick:{int:'all', ft:'all', pub:'all'} };
-let zoomState = { pub:'month', int:'month', ft:'month' };
+let zoomState = { pub:'year', int:'year', ft:'year' };
 let showExactDates = false;
 let viewingPublic = false; // true while rendering/interacting with the public read-only roadmap
 let productFilter = { pub:'all', int:'all', ft:'all' };
@@ -708,7 +708,7 @@ let displayDepth = { modules:true, level1:true, level2:true, level3:true };
 let dashFilter = { product:'all', period:'year' };
 let landingExpanded = false, internalProductsExpanded = false;
 
-let timelineOffset = { pub:0, int:0, ft:0 }; // shifts the visible window forward/back a period at a time
+let timelineAnchor = { pub: new Date(), int: new Date(), ft: new Date() }; // reference date the current zoom level is computed around
 
 function fmtDate(d){ if(!d) return '?'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 function productById(id){ return products.find(p=>p.id===id); }
@@ -1028,23 +1028,42 @@ function renderBoard(scope){
 }
 
 /* ---------- GANTT ---------- */
-// Builds the visible date window + column definitions for the current zoom level.
-// 'year' zoom shows 3 calendar years at once; timelineOffset shifts the whole window.
+// Zoom drills down: Year -> 12 month columns, Quarter -> weeks within one quarter,
+// Month -> individual days within one month. timelineAnchor is the reference date
+// that Year/Quarter/Month are computed around; shiftTimeline moves it by one unit.
 function getTimelineWindow(scope){
-  const level = zoomState[scope] || 'month';
-  const baseYear = new Date().getFullYear() + (timelineOffset[scope] || 0);
+  const level = zoomState[scope] || 'year';
+  const anchor = timelineAnchor[scope] || new Date();
+
+  if(level==='month'){
+    const y = anchor.getFullYear(), m = anchor.getMonth();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const cols = [];
+    for(let d=1; d<=daysInMonth; d++){ cols.push({ label:String(d), start:new Date(y,m,d), end:new Date(y,m,d+1) }); }
+    return { start:cols[0].start, end:cols[cols.length-1].end, cols, title: anchor.toLocaleDateString('en-US',{month:'long', year:'numeric'}) };
+  }
+
   if(level==='quarter'){
-    const cols = [0,1,2,3].map(q=>({ label:'Q'+(q+1)+' '+baseYear, start:new Date(baseYear,q*3,1), end:new Date(baseYear,q*3+3,1) }));
-    return { start:cols[0].start, end:cols[cols.length-1].end, cols };
+    const y = anchor.getFullYear();
+    const q = Math.floor(anchor.getMonth()/3);
+    const qStart = new Date(y, q*3, 1);
+    const qEnd = new Date(y, q*3+3, 1);
+    const cols = [];
+    let cur = new Date(qStart);
+    while(cur < qEnd){
+      const wEnd = new Date(cur); wEnd.setDate(wEnd.getDate()+7);
+      const end = wEnd < qEnd ? wEnd : qEnd;
+      cols.push({ label: cur.toLocaleDateString('en-US',{month:'short',day:'numeric'}), start:new Date(cur), end });
+      cur = wEnd;
+    }
+    return { start:qStart, end:qEnd, cols, title:'Q'+(q+1)+' '+y };
   }
-  if(level==='year'){
-    const years = [baseYear-1, baseYear, baseYear+1];
-    const cols = years.map(y=>({ label:String(y), start:new Date(y,0,1), end:new Date(y+1,0,1) }));
-    return { start:cols[0].start, end:cols[cols.length-1].end, cols };
-  }
+
+  // year (default): 12 month columns for one calendar year
+  const y = anchor.getFullYear();
   const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const cols = MONTH_NAMES.map((m,i)=>({ label:m+' '+baseYear, start:new Date(baseYear,i,1), end:new Date(baseYear,i+1,1) }));
-  return { start:cols[0].start, end:cols[cols.length-1].end, cols };
+  const cols = MONTH_NAMES.map((m,i)=>({ label:m, start:new Date(y,i,1), end:new Date(y,i+1,1) }));
+  return { start:cols[0].start, end:cols[cols.length-1].end, cols, title:String(y) };
 }
 function timeFraction(dateStr, win){
   if(!dateStr) return 0;
@@ -1053,7 +1072,15 @@ function timeFraction(dateStr, win){
   if(span<=0) return 0;
   return Math.min(1, Math.max(0, (t - win.start.getTime()) / span));
 }
-shiftTimeline = function(scope, dir){ timelineOffset[scope] = (timelineOffset[scope]||0) + dir; renderGanttView(scope, scope==='pub'); };
+shiftTimeline = function(scope, dir){
+  const level = zoomState[scope] || 'year';
+  const d = new Date(timelineAnchor[scope] || new Date());
+  if(level==='month') d.setMonth(d.getMonth()+dir);
+  else if(level==='quarter') d.setMonth(d.getMonth()+dir*3);
+  else d.setFullYear(d.getFullYear()+dir);
+  timelineAnchor[scope] = d;
+  renderGanttView(scope, scope==='pub');
+};
 function ensureTimelineNav(scope){
   const zoomSeg = document.getElementById(scope+'-zoom-seg');
   if(zoomSeg && !document.getElementById(scope+'-timeline-nav')){
@@ -1061,7 +1088,7 @@ function ensureTimelineNav(scope){
     nav.id = scope+'-timeline-nav';
     nav.className = 'seg';
     nav.style.marginLeft = '6px';
-    nav.innerHTML = `<button onclick="shiftTimeline('${scope}',-1)" title="Earlier">‹</button><button onclick="shiftTimeline('${scope}',1)" title="Later">›</button>`;
+    nav.innerHTML = `<button onclick="shiftTimeline('${scope}',-1)" title="Earlier">‹</button><span id="${scope}-timeline-label" style="padding:0 10px; font-weight:700; font-size:12.5px; display:flex; align-items:center; white-space:nowrap;"></span><button onclick="shiftTimeline('${scope}',1)" title="Later">›</button>`;
     zoomSeg.insertAdjacentElement('afterend', nav);
   }
 }
@@ -1071,9 +1098,11 @@ function renderGanttView(scope, publicOnly){
   if(!fixedEl) return;
   ensureTimelineNav(scope);
 
+  const win = getTimelineWindow(scope);
+  const labelEl = document.getElementById(scope+'-timeline-label'); if(labelEl) labelEl.textContent = win.title;
+
   if(groups.length===0){ fixedEl.innerHTML=''; headEl.innerHTML=''; laneEl.innerHTML = `<div class="empty-state">No features match the current filters.</div>`; return; }
 
-  const win = getTimelineWindow(scope);
   const timelineEl = headEl.parentElement;
   // Whole window always fits the available width exactly - no horizontal scrolling, ever.
   const totalWidth = Math.max((timelineEl && timelineEl.clientWidth) || 0, 480) || Math.max(window.innerWidth - 420, 480);
@@ -1803,7 +1832,7 @@ setBoardView = function(scope, view){
   const zoom = document.getElementById(scope+'-zoom-seg'); if(zoom) zoom.style.display = view==='gantt' ? '' : 'none';
   renderBoard(scope);
 };
-setZoom = function(level, scope){ zoomState[scope] = level; timelineOffset[scope] = 0; closeAllDD(); renderBoard(scope); };
+setZoom = function(level, scope){ zoomState[scope] = level; timelineAnchor[scope] = new Date(); closeAllDD(); renderBoard(scope); };
 
 renderFilterPanel = function(panelId){
   const scope = panelId.split('-')[0], panel = document.getElementById(panelId); if(!panel) return;
