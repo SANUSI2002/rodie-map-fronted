@@ -858,10 +858,16 @@ function renderInternalProducts(){
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div class="p-icon" style="background:${p.color}18;"><i data-lucide="${p.icon}" style="width:20px;height:20px;color:${p.color};"></i></div>
         <div style="display:flex; align-items:center; gap:8px;">
-          <button class="icon-btn" title="Edit product" onclick="event.stopPropagation(); openProductModal('${p.id}')"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
           <label class="toggle ${isPublic?'on':''}" style="gap:6px;" onclick="event.stopPropagation(); toggleProductVisibility('${p.id}')" title="${isPublic?'Click to make internal-only':'Click to make public'}">
             <div class="toggle-track"></div><span style="font-size:11px; color:${isPublic?'var(--st-released)':'var(--ink-faint)'};">${isPublic?'Public':'Internal'}</span>
           </label>
+          <div class="dd" onclick="event.stopPropagation();">
+            <button class="icon-btn" onclick="toggleDD('product-actions-${p.id}')" title="More actions"><i data-lucide="more-horizontal" style="width:16px;height:16px;"></i></button>
+            <div class="dd-panel right" id="product-actions-${p.id}" style="width:150px; padding:6px;">
+              <a class="avatar-menu-item" onclick="closeAllDD(); openProductModal('${p.id}')"><i data-lucide="pencil" style="width:14px;height:14px;"></i>Edit</a>
+              <a class="avatar-menu-item" onclick="closeAllDD(); deleteProduct('${p.id}')" style="color:#EF4444;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i>Delete</a>
+            </div>
+          </div>
         </div>
       </div>
       <h3>${p.name}</h3><p title="${desc.replace(/"/g,'&quot;')}">${snippet}</p>
@@ -2044,22 +2050,21 @@ function renderModulesTable(){
   const body = document.getElementById('modules-page-table-body'); if(!body) return;
   body.innerHTML = modules.map(m=>{
     const p = productById(m.productId), count = features.filter(f=>f.moduleId===m.id).length;
-    return `<tr><td>${moduleTableDropdown(m)}</td><td>${p?p.name:'-'}</td><td>${m.active===false?'Inactive':'Active'}</td><td>${count}</td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openModuleModal('${m.id}')">Edit</button><button class="btn btn-ghost btn-sm" onclick="toggleModuleActive('${m.id}')">${m.active===false?'Activate':'Inactive'}</button><button class="btn btn-ghost btn-sm" onclick="deleteModule('${m.id}')">Delete</button></td></tr>`;
+    const menuId = `module-actions-${m.id}`;
+    return `<tr><td>${moduleTableDropdown(m)}</td><td>${p?p.name:'-'}</td><td>${m.active===false?'Inactive':'Active'}</td><td>${count}</td><td style="white-space:nowrap;">
+      <div class="dd" onclick="event.stopPropagation();">
+        <button class="icon-btn" onclick="toggleDD('${menuId}')" title="More actions"><i data-lucide="more-horizontal" style="width:16px;height:16px;"></i></button>
+        <div class="dd-panel right" id="${menuId}" style="width:170px; padding:6px;">
+          <a class="avatar-menu-item" onclick="closeAllDD(); openModuleModal('${m.id}')"><i data-lucide="pencil" style="width:14px;height:14px;"></i>Edit</a>
+          <a class="avatar-menu-item" onclick="closeAllDD(); toggleModuleActive('${m.id}')"><i data-lucide="${m.active===false?'check-circle':'ban'}" style="width:14px;height:14px;"></i>${m.active===false?'Activate':'Deactivate'}</a>
+          <a class="avatar-menu-item" onclick="closeAllDD(); deleteModule('${m.id}')" style="color:#EF4444;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i>Delete</a>
+        </div>
+      </div>
+    </td></tr>`;
   }).join('');
   lucide.createIcons();
 }
 function renderModulesPage(){ renderModulesTable(); }
-const originalRenderInternalProducts = renderInternalProducts;
-renderInternalProducts = function(){
-  originalRenderInternalProducts();
-  document.querySelectorAll('#internal-product-grid .product-card').forEach(card=>{
-    if(card.querySelector('[data-delete-product]')) return;
-    const onclick = card.getAttribute('onclick') || '';
-    const match = onclick.match(/'([^']+)'/); if(!match) return;
-    const top = card.querySelector('div');
-    if(top) top.insertAdjacentHTML('beforeend', `<button data-delete-product class="icon-btn" onclick="event.stopPropagation(); deleteProduct('${match[1]}')" title="Delete product"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>`);
-  });
-};
 moduleOptionsFor = function(productId){ return modules.filter(m=>m.productId===productId && m.active!==false).map(m=>`<option value="${m.id}">${m.name}</option>`).join(''); };
 function deleteFeature(id){
   if(!canEdit()){ showToast('Viewers cannot delete features'); return; }
@@ -2355,6 +2360,8 @@ submitFeature = async function(){
 };
 deleteFeature = async function(id){
   if(!canEdit()){ showToast('Viewers cannot delete features'); return; }
+  const f = featureById(id);
+  if(!confirm(`Delete "${f ? f.title : 'this feature'}"? This can't be undone.`)) return;
   try {
     await apiFetch('/features/'+id, { method:'DELETE' });
     features = features.filter(f=>f.id!==id && f.parentId!==id);
@@ -2405,6 +2412,8 @@ deleteModule = async function(id){
   if(!canEdit()){ showToast('Viewers cannot delete modules'); return; }
   const count = features.filter(f=>f.moduleId===id).length;
   if(count){ showToast('Delete all features under this module first'); return; }
+  const m = moduleById(id);
+  if(!confirm(`Delete "${m ? m.name : 'this module'}"? This can't be undone.`)) return;
   try {
     await apiFetch('/modules/'+id, { method:'DELETE' });
     modules = modules.filter(m=>m.id!==id);
@@ -2454,6 +2463,8 @@ toggleProductVisibility = async function(id){
 deleteProduct = async function(id){
   if(!canEdit()){ showToast('Viewers cannot delete products'); return; }
   if(features.some(f=>f.productId===id)){ showToast('Delete this product features first'); return; }
+  const p = productById(id);
+  if(!confirm(`Delete "${p ? p.name : 'this product'}"? This can't be undone.`)) return;
   try {
     await apiFetch('/products/'+id, { method:'DELETE' });
     products = products.filter(p=>p.id!==id);
