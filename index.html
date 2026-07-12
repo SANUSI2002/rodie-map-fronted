@@ -1440,11 +1440,25 @@ function openFeatureModal(prefill){
     </div>
     <div id="nf-date-error" style="display:none; color:#EF4444; font-size:12.5px; margin:-10px 0 14px;">End date can't be earlier than the start date.</div>
     <div class="field" id="nf-relaunch-wrap" style="display:${cur.status==='POSTPONED'?'block':'none'};"><label>New launch date (postponed to)</label><input id="nf-relaunch" type="date" value="${cur.relaunchDate||''}"></div>
+    <div class="field" id="nf-release-wrap" style="display:${cur.status==='RELEASED'?'block':'none'};">
+      <label>Release date</label>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:500; cursor:pointer; margin-bottom:8px;">
+        <input type="checkbox" id="nf-release-use-end" onchange="onReleaseDateModeChange()" ${(cur.releaseDate && cur.releaseDate===cur.endDate) || !cur.releaseDate ? 'checked' : ''}> Use the end date as the release date
+      </label>
+      <input id="nf-release-date" type="date" value="${cur.releaseDate || cur.endDate || todayStr}">
+    </div>
     <div class="field"><label>Visibility</label><select id="nf-visibility"><option value="PRIVATE" ${cur.visibility==='PRIVATE'?'selected':''}>Internal</option><option value="PUBLIC" ${cur.visibility==='PUBLIC'?'selected':''}>Public</option></select></div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="nf-submit-btn" onclick="submitFeature()">${editing ? 'Save changes' : 'Create feature'}</button></div>
   `);
   document.getElementById('nf-module').value = cur.moduleId || '';
   validateFeatureDates();
+  onReleaseDateModeChange();
+}
+function onReleaseDateModeChange(){
+  const useEnd = document.getElementById('nf-release-use-end'); const dateEl = document.getElementById('nf-release-date'); const endEl = document.getElementById('nf-end');
+  if(!useEnd || !dateEl) return;
+  if(useEnd.checked){ dateEl.value = endEl.value; dateEl.disabled = true; }
+  else { if(!dateEl.value || dateEl.value===endEl.value) dateEl.value = new Date().toISOString().slice(0,10); dateEl.disabled = false; }
 }
 function validateFeatureDates(){
   const startEl = document.getElementById('nf-start'), endEl = document.getElementById('nf-end');
@@ -1453,11 +1467,21 @@ function validateFeatureDates(){
   const invalid = !!(startEl.value && endEl.value && endEl.value < startEl.value);
   if(errEl) errEl.style.display = invalid ? 'block' : 'none';
   if(btnEl) btnEl.disabled = invalid;
+  onReleaseDateModeChange();
   return !invalid;
 }
 function onFeatureStatusChange(){
   const status = document.getElementById('nf-status').value;
   document.getElementById('nf-relaunch-wrap').style.display = status==='POSTPONED' ? 'block' : 'none';
+  const releaseWrap = document.getElementById('nf-release-wrap');
+  if(releaseWrap){
+    releaseWrap.style.display = status==='RELEASED' ? 'block' : 'none';
+    if(status==='RELEASED'){
+      const dateEl = document.getElementById('nf-release-date');
+      if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+      onReleaseDateModeChange();
+    }
+  }
   // Auto-fill progress to 100 when marking released, but leave user free to change it.
   if(status==='RELEASED'){ document.getElementById('nf-progress').value = 100; document.getElementById('nf-progress-val').textContent = '100'; }
 }
@@ -2141,7 +2165,7 @@ function deleteProduct(id){
   products = products.filter(p=>p.id!==id); modules = modules.filter(m=>m.productId!==id); renderInternalProducts(); showToast('Product deleted');
 }
 const originalOpenProductModal = openProductModal;
-openProductModal = function(){ if(!canEdit()){ showToast('Viewers cannot create products'); return; } originalOpenProductModal(); };
+openProductModal = function(id){ if(!canEdit()){ showToast(id ? 'Viewers cannot edit products' : 'Viewers cannot create products'); return; } originalOpenProductModal(id); };
 const originalSubmitProduct = submitProduct;
 submitProduct = function(){ if(!canEdit()){ showToast('Viewers cannot create products'); return; } originalSubmitProduct(); };
 const originalRenderUsersTable = renderUsersTable;
@@ -2232,6 +2256,7 @@ function mapFeatureDates(f){
     startDate: f.startDate ? String(f.startDate).slice(0,10) : '',
     endDate: f.endDate ? String(f.endDate).slice(0,10) : '',
     relaunchDate: f.relaunchDate ? String(f.relaunchDate).slice(0,10) : '',
+    releaseDate: f.releaseDate ? String(f.releaseDate).slice(0,10) : '',
   });
 }
 
@@ -2362,6 +2387,7 @@ submitFeature = async function(){
     const parent = featureById(selectedParentId);
     if(parent){ productId = parent.productId; moduleId = parent.moduleId || null; }
   }
+  const releaseDateEl = document.getElementById('nf-release-date');
   const payload = {
     productId, moduleId, parentId: selectedParentId || null,
     title, description: document.getElementById('nf-description').value.trim(),
@@ -2370,6 +2396,7 @@ submitFeature = async function(){
     startDate: document.getElementById('nf-start').value || null,
     endDate: document.getElementById('nf-end').value || null,
     relaunchDate: status==='POSTPONED' ? (document.getElementById('nf-relaunch').value || null) : null,
+    releaseDate: status==='RELEASED' ? ((releaseDateEl && releaseDateEl.value) || null) : null,
     visibility: document.getElementById('nf-visibility').value,
   };
   try {
