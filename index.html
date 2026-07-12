@@ -811,11 +811,24 @@ function toggleDD(id){
   const willOpen = !el.classList.contains('open');
   closeAllDD();
   if(!willOpen) return;
-  el.classList.add('open');
 
-  const btn = el.parentElement ? el.parentElement.querySelector(':scope > button, :scope > .avatar, :scope > .icon-btn') : null;
+  const originalParent = el.parentElement;
+  const btn = originalParent ? originalParent.querySelector(':scope > button, :scope > .avatar, :scope > .icon-btn') : null;
   if(!btn) return;
   const btnRect = btn.getBoundingClientRect();
+
+  // Move the panel out to <body> while open. If it stays inside an ancestor that
+  // has a CSS transform (e.g. a card that lifts on hover), position:fixed would be
+  // computed relative to that transformed ancestor instead of the real viewport,
+  // making the menu appear in the wrong place and jump as hover state changes.
+  if(!el._ddPlaceholder){
+    const placeholder = document.createComment('dd-placeholder');
+    originalParent.insertBefore(placeholder, el);
+    el._ddPlaceholder = placeholder;
+  }
+  document.body.appendChild(el);
+  el.classList.add('open'); // must happen before measuring - it's display:none until then
+
   const panelRect = el.getBoundingClientRect();
   const isRightAligned = el.classList.contains('right');
 
@@ -835,6 +848,11 @@ function closeAllDD(){
   document.querySelectorAll('.dd-panel.open').forEach(p=>{
     p.classList.remove('open');
     p.style.position=''; p.style.top=''; p.style.left=''; p.style.right='';
+    if(p._ddPlaceholder && p._ddPlaceholder.parentNode){
+      p._ddPlaceholder.parentNode.insertBefore(p, p._ddPlaceholder);
+      p._ddPlaceholder.remove();
+      p._ddPlaceholder = null;
+    }
   });
 }
 document.addEventListener('click', (e)=>{ if(!e.target.closest('.dd')) closeAllDD(); });
@@ -1188,7 +1206,7 @@ function toggleModuleCollapse(modId, scope){ collapsedModules.has(modId) ? colla
 function renderListView(scope, publicOnly){
   const headEl = document.getElementById(scope+'-list-head'); const bodyEl = document.getElementById(scope+'-list-body');
   if(!headEl) return;
-  const cols = scope==='ft' ? FEATURE_COLUMNS.filter(c=>activeColumns.has(c.key)) : FEATURE_COLUMNS.filter(c=>c.key!=='visibility');
+  const cols = scope==='ft' ? FEATURE_COLUMNS.filter(c=>activeColumns.has(c.key)) : FEATURE_COLUMNS.filter(c=>c.key!=='visibility' && !(publicOnly && c.key==='priority'));
   headEl.innerHTML = cols.map(c=>`<th>${c.label}</th>`).join('') + `<th></th>`;
   const groups = getBoardGroups(scope, publicOnly);
   if(groups.length===0){ bodyEl.innerHTML = `<tr><td colspan="${cols.length+1}"><div class="empty-state">No features match your filters.</div></td></tr>`; return; }
@@ -1237,7 +1255,7 @@ function renderKanbanView(scope, publicOnly){
       ${items.map(f=>`<div class="kanban-card" style="${f._depth>0?'margin-left:14px; border-left:2px solid var(--border); border-top-left-radius:2px; border-bottom-left-radius:2px;':''}" onclick='openDrawer(${JSON.stringify(f).replace(/'/g,"&apos;")})'>
         <div class="kt">${f._depth>0?'<i data-lucide="corner-down-right" style="width:11px;height:11px;color:var(--ink-faint); vertical-align:-1px; margin-right:4px;"></i>':''}${f.title}</div>
         <div class="km">${f._product.name}${f._module?' ? '+f._module.name:''}</div>
-        <div class="kf"><span class="prio-badge" style="background:${PRIORITY_META[f.priority].color}22; color:${PRIORITY_META[f.priority].color};">P${f.priority}</span>${viewingPublic ? `<span class="mini-bar-bg" style="width:50px;"><span class="mini-bar-fg" style="width:${f.progress}%; background:${STATUS_COLORS[f.status]}; display:block;"></span></span>` : `<span style="font-size:11px; color:var(--ink-faint); font-weight:700;">${f.progress}%</span>`}</div>
+        <div class="kf">${viewingPublic ? '' : `<span class="prio-badge" style="background:${PRIORITY_META[f.priority].color}22; color:${PRIORITY_META[f.priority].color};">P${f.priority}</span>`}${viewingPublic ? `<span class="mini-bar-bg" style="width:50px;"><span class="mini-bar-fg" style="width:${f.progress}%; background:${STATUS_COLORS[f.status]}; display:block;"></span></span>` : `<span style="font-size:11px; color:var(--ink-faint); font-weight:700;">${f.progress}%</span>`}</div>
       </div>`).join('') || `<div style="font-size:12px; color:var(--ink-faint); padding:10px 4px;">No features</div>`}
     </div>`;
   }).join('');
@@ -1250,7 +1268,9 @@ function renderKanbanView(scope, publicOnly){
 function showTip(e, f){
   const tip = document.getElementById('gantt-tooltip');
   const dateLine = viewingPublic ? (showExactDates ? `<span class="tt-range">Release date: ${fmtDate(f.endDate)}</span><br>` : '') : `<span class="tt-range">${fmtDate(f.startDate)} - ${fmtDate(f.endDate)}</span><br>`;
-  tip.innerHTML = `<b>${f.title}</b>${dateLine}<span class="tt-range">${STATUS_LABELS[f.status]} · Priority P${f.priority} (${PRIORITY_META[f.priority].label})${viewingPublic ? '' : ' · '+f.progress+'% complete'}</span>`;
+  const priorityPart = viewingPublic ? '' : ` · Priority P${f.priority} (${PRIORITY_META[f.priority].label})`;
+  const progressPart = viewingPublic ? '' : ' · '+f.progress+'% complete';
+  tip.innerHTML = `<b>${f.title}</b>${dateLine}<span class="tt-range">${STATUS_LABELS[f.status]}${priorityPart}${progressPart}</span>`;
   tip.style.opacity = 1; moveTip(e);
 }
 function moveTip(e){ const tip = document.getElementById('gantt-tooltip'); tip.style.left = (e.clientX+16)+'px'; tip.style.top = (e.clientY+16)+'px'; }
@@ -1267,7 +1287,7 @@ function openDrawer(f){
     ${f.status==='POSTPONED' && f.relaunchDate ? `<div class="drawer-field"><label>Postponed ? new launch date</label><div class="value" style="color:var(--st-delayed);">${fmtDate(f.relaunchDate)}</div></div>` : ''}
     <div class="drawer-field"><label>Progress</label>${viewingPublic ? '' : `<div class="value">${f.progress}%</div>`}<div class="drawer-progress-bg"><div class="drawer-progress-fg" style="width:${f.progress}%; background:${STATUS_COLORS[f.status]};"></div></div></div>
     <div class="drawer-field"><label>Owner</label><div class="value">${f.owner}</div></div>
-    <div class="drawer-field"><label>Priority</label><div class="value"><span class="prio-badge" style="background:${PRIORITY_META[f.priority].color}22; color:${PRIORITY_META[f.priority].color}; padding:3px 8px; font-size:11.5px;">P${f.priority} ? ${PRIORITY_META[f.priority].label}</span></div></div>
+    ${viewingPublic ? '' : `<div class="drawer-field"><label>Priority</label><div class="value"><span class="prio-badge" style="background:${PRIORITY_META[f.priority].color}22; color:${PRIORITY_META[f.priority].color}; padding:3px 8px; font-size:11.5px;">P${f.priority} ? ${PRIORITY_META[f.priority].label}</span></div></div>`}
     <div class="drawer-field"><label>Visibility</label><div class="value">${f.visibility==='PUBLIC'?'Public':'Internal'}</div></div>
     ${(!viewingPublic && session.loggedIn) ? `<button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;" onclick="closeDrawer(); openFeatureModal({id:'${f.id}'})"><i data-lucide="pencil" style="width:14px;height:14px;"></i>Edit feature</button>` : ''}`;
   document.getElementById('drawer-overlay').classList.add('open');
@@ -2132,7 +2152,7 @@ listCell = function(f, key, product, module, scope, publicOnly){
 };
 renderListView = function(scope, publicOnly){
   const headEl = document.getElementById(scope+'-list-head'), bodyEl = document.getElementById(scope+'-list-body'); if(!headEl) return;
-  const cols = scope==='ft' ? FEATURE_COLUMNS.filter(c=>activeColumns.has(c.key)) : FEATURE_COLUMNS.filter(c=>c.key!=='visibility');
+  const cols = scope==='ft' ? FEATURE_COLUMNS.filter(c=>activeColumns.has(c.key)) : FEATURE_COLUMNS.filter(c=>c.key!=='visibility' && !(publicOnly && c.key==='priority'));
   headEl.innerHTML = cols.map(c=>`<th>${c.label}</th>`).join('') + `<th></th>`;
   const groups = getBoardGroups(scope, publicOnly);
   if(groups.length===0){ bodyEl.innerHTML = `<tr><td colspan="${cols.length+1}"><div class="empty-state">No features match your filters.</div></td></tr>`; return; }
