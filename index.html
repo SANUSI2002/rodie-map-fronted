@@ -56,7 +56,7 @@
   .product-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:26px 22px; transition:all .25s cubic-bezier(.2,.8,.2,1); cursor:pointer; }
   .product-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-md); border-color:transparent; }
   .p-icon{ width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
-  .product-card h3{ font-size:16px; margin:0 0 6px; } .product-card p{ font-size:13px; color:var(--ink-faint); margin:0 0 16px; line-height:1.5; }
+  .product-card h3{ font-size:16px; margin:0 0 6px; } .product-card p{ font-size:13px; color:var(--ink-faint); margin:0 0 16px; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .p-meta{ display:flex; align-items:center; justify-content:space-between; font-size:12px; }
   .p-count{ color:var(--ink-soft); font-weight:600; }
   .p-bar{ height:5px; border-radius:99px; background:var(--border-soft); margin-top:14px; overflow:hidden; }
@@ -592,9 +592,22 @@
     <aside class="sidebar" id="sidebar-products"></aside>
     <div class="main"><div class="topbar" id="topbar-products"></div>
       <div class="content">
-        <div class="page-head"><div><h1>Products</h1></div><button class="btn btn-primary" onclick="openProductModal()">+ Create Product</button></div>
+        <div class="page-head"><div><h1>Products</h1></div><div style="display:flex; gap:10px;"><button class="btn btn-ghost" onclick="go('modules')"><i data-lucide="boxes" style="width:15px;height:15px;"></i> Modules</button><button class="btn btn-primary" onclick="openProductModal()">+ Create Product</button></div></div>
         <div class="product-grid" id="internal-product-grid" style="margin:0; padding:0; max-width:none;"></div>
         <div class="view-more-row" id="internal-view-more" style="margin:20px 0 0; padding:0;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MODULES ================= -->
+<section class="view" id="view-modules">
+  <div class="app">
+    <aside class="sidebar" id="sidebar-modules"></aside>
+    <div class="main"><div class="topbar" id="topbar-modules"></div>
+      <div class="content">
+        <div class="page-head"><div><h1>Modules</h1><p>Modules group features within a product. Manage them separately here so the Products page stays short.</p></div><div style="display:flex; gap:10px;"><button class="btn btn-ghost" onclick="go('products')"><i data-lucide="arrow-left" style="width:15px;height:15px;"></i> Back to Products</button><button class="btn btn-primary" onclick="openModuleModal()">+ Create Module</button></div></div>
+        <div class="ftable-wrap"><table class="ftable"><thead><tr><th>Module</th><th>Product</th><th>Status</th><th>Features</th><th></th></tr></thead><tbody id="modules-page-table-body"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -730,7 +743,7 @@ function toggleTheme(){
 /* ==================================================================
    NAVIGATION
 ================================================================== */
-const INTERNAL_VIEWS = ['dashboard','roadmap','features','products','reports','users','settings'];
+const INTERNAL_VIEWS = ['dashboard','roadmap','features','products','modules','reports','users','settings'];
 const SIDEBAR_LINKS = [
   { view:'dashboard', label:'Dashboard', icon:'layout-dashboard' }, { view:'roadmap', label:'Roadmap View', icon:'map' },
   { view:'products', label:'Products', icon:'package' }, { view:'features', label:'Features', icon:'list' },
@@ -747,6 +760,7 @@ function go(view){
   if(view==='roadmap') renderBoard('int');
   if(view==='features') renderBoard('ft');
   if(view==='products') renderInternalProducts();
+  if(view==='modules') renderModulesPage();
   if(view==='reports') renderReports();
   if(view==='users') renderUsersTable();
   if(view==='public-roadmap') renderBoard('pub');
@@ -837,8 +851,9 @@ function renderInternalProducts(){
   const shown = internalProductsExpanded ? products : products.slice(0,8);
   document.getElementById('internal-product-grid').innerHTML = shown.map(p=>{
     const feats = features.filter(f=>f.productId===p.id);
-    const avg = feats.length ? Math.round(feats.reduce((s,f)=>s+f.progress,0)/feats.length) : 0;
     const isPublic = p.visibility==='PUBLIC';
+    const desc = p.description || '';
+    const snippet = desc.length > 90 ? desc.slice(0,90).trim() + '…' : desc;
     return `<div class="product-card" onclick="openPublicRoadmapForInternal('${p.id}')">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div class="p-icon" style="background:${p.color}18;"><i data-lucide="${p.icon}" style="width:20px;height:20px;color:${p.color};"></i></div>
@@ -849,9 +864,8 @@ function renderInternalProducts(){
           </label>
         </div>
       </div>
-      <h3>${p.name}</h3><p>${p.description}</p>
-      <div class="p-meta"><span class="p-count">${feats.length} features</span><span style="color:var(--ink-faint)">${avg}% complete</span></div>
-      <div class="p-bar"><i style="width:${avg}%; background:${p.color};"></i></div>
+      <h3>${p.name}</h3><p title="${desc.replace(/"/g,'&quot;')}">${snippet}</p>
+      <div class="p-meta"><span class="p-count">${feats.length} features</span></div>
     </div>`;
   }).join('');
   const rest = products.length - 8;
@@ -1733,7 +1747,7 @@ function canEdit(){ return !isViewer(); }
 function canAccessView(view){ return !(view==='users' || view==='settings') || isSuperAdmin(); }
 
 renderSidebar = function(activeView){
-  ['dashboard','roadmap','features','products','reports','users','settings'].forEach(v=>{
+  ['dashboard','roadmap','features','products','modules','reports','users','settings'].forEach(v=>{
     const el = document.getElementById('sidebar-'+v); if(!el) return;
     const collapsed = collapsedSidebars.has(v);
     el.classList.toggle('collapsed', collapsed);
@@ -1760,7 +1774,7 @@ renderSidebar = function(activeView){
 function toggleSidebarCollapse(view){ collapsedSidebars.has(view) ? collapsedSidebars.delete(view) : collapsedSidebars.add(view); renderSidebar(view); }
 
 buildTopbars = function(){
-  ['dashboard','roadmap','features','products','reports','users','settings'].forEach(v=>{
+  ['dashboard','roadmap','features','products','modules','reports','users','settings'].forEach(v=>{
     const el = document.getElementById('topbar-'+v); if(!el) return;
     el.innerHTML = `
       <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
@@ -2027,13 +2041,14 @@ renderBoard = function(scope){
 };
 
 function renderModulesTable(){
-  const body = document.getElementById('modules-table-body'); if(!body) return;
+  const body = document.getElementById('modules-page-table-body'); if(!body) return;
   body.innerHTML = modules.map(m=>{
     const p = productById(m.productId), count = features.filter(f=>f.moduleId===m.id).length;
     return `<tr><td>${moduleTableDropdown(m)}</td><td>${p?p.name:'-'}</td><td>${m.active===false?'Inactive':'Active'}</td><td>${count}</td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openModuleModal('${m.id}')">Edit</button><button class="btn btn-ghost btn-sm" onclick="toggleModuleActive('${m.id}')">${m.active===false?'Activate':'Inactive'}</button><button class="btn btn-ghost btn-sm" onclick="deleteModule('${m.id}')">Delete</button></td></tr>`;
   }).join('');
   lucide.createIcons();
 }
+function renderModulesPage(){ renderModulesTable(); }
 const originalRenderInternalProducts = renderInternalProducts;
 renderInternalProducts = function(){
   originalRenderInternalProducts();
@@ -2044,10 +2059,6 @@ renderInternalProducts = function(){
     const top = card.querySelector('div');
     if(top) top.insertAdjacentHTML('beforeend', `<button data-delete-product class="icon-btn" onclick="event.stopPropagation(); deleteProduct('${match[1]}')" title="Delete product"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>`);
   });
-  if(!document.getElementById('modules-table-body')){
-    document.getElementById('internal-view-more').insertAdjacentHTML('afterend', `<div class="panel" style="margin-top:22px;"><div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;"><h3 style="margin:0;">Modules</h3><button class="btn btn-primary btn-sm" onclick="openModuleModal()">+ Create Module</button></div><div class="ftable-wrap"><table class="ftable"><thead><tr><th>Module</th><th>Product</th><th>Status</th><th>Features</th><th></th></tr></thead><tbody id="modules-table-body"></tbody></table></div></div>`);
-  }
-  renderModulesTable();
 };
 moduleOptionsFor = function(productId){ return modules.filter(m=>m.productId===productId && m.active!==false).map(m=>`<option value="${m.id}">${m.name}</option>`).join(''); };
 function deleteFeature(id){
