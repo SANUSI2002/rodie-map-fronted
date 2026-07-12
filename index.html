@@ -468,16 +468,8 @@
             <div style="flex:1;" id="status-legend"></div>
           </div></div>
         </div>
-        <div class="grid-3">
-          <div class="panel trend-panel">
-            <div class="trend-head">
-              <div><h3>Delivery trend</h3><div class="trend-sub" id="trend-subtitle">Actual shipped features over time</div></div>
-              <div class="trend-kpis" id="trend-kpis"></div>
-            </div>
-            <svg class="trend-svg" id="trend-chart" viewBox="0 0 520 190"></svg>
-            <div class="trend-legend"><span><i style="background:var(--blue);"></i>Shipped</span><span><i style="background:#94A3B8;"></i>Target</span></div>
-          </div>
-          <div class="panel"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"><h3 style="margin:0;">Recent releases</h3><button class="btn btn-ghost btn-sm" onclick="go('features')">View more</button></div><div id="recent-releases-list"></div></div>
+        <div class="grid-2" style="margin-top:20px;">
+          <div class="panel"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"><h3 style="margin:0;">Recent releases</h3><button class="btn btn-ghost btn-sm" onclick="openRecentReleases()">View more</button></div><div id="recent-releases-list"></div></div>
           <div class="panel"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"><h3 style="margin:0;">Upcoming releases</h3><button class="btn btn-ghost btn-sm" onclick="go('features')">View more</button></div><div id="upcoming-list"></div></div>
         </div>
       </div>
@@ -1764,11 +1756,8 @@ function renderDashboard(){
     }).join('');
   document.getElementById('status-legend').innerHTML = Object.keys(donutColors).map(k=>`<div class="activity-row" style="border:none; padding:6px 0;"><span style="display:flex; align-items:center; gap:8px;"><span style="width:9px;height:9px;border-radius:3px;background:${donutColors[k]};display:inline-block;"></span>${STATUS_LABELS[k]}</span><span style="margin-left:auto; font-weight:700;">${counts[k]}</span></div>`).join('');
 
-  renderDeliveryTrend(scopedAll);
-
-
   document.getElementById('recent-releases-list').innerHTML = all.filter(f=>f.status==='RELEASED').sort((a,b)=>new Date(b.endDate)-new Date(a.endDate)).slice(0,4).map(f=>
-    `<div class="activity-row"><span class="a-dot" style="background:#22C55E;"></span><div><div class="a-text"><b>${f.title}</b></div><div class="a-time">${f.product} ? released ${fmtDate(f.endDate)}</div></div></div>`).join('');
+    `<div class="activity-row"><span class="a-dot" style="background:#22C55E;"></span><div><div class="a-text"><b>${f.title}</b></div><div class="a-time">${f.product} · released ${fmtDate(f.releaseDate || f.endDate)}</div></div></div>`).join('');
 
   document.getElementById('upcoming-list').innerHTML = all.filter(f=>f.status==='PLANNED'||f.status==='IN_PROGRESS').sort((a,b)=>new Date(a.endDate)-new Date(b.endDate)).slice(0,4).map(f=>
     `<div class="activity-row"><span class="a-dot" style="background:${STATUS_COLORS[f.status]};"></span><div><div class="a-text"><b>${f.title}</b></div><div class="a-time">${f.product} ? targeting ${fmtDate(f.endDate)}</div></div></div>`).join('');
@@ -2004,7 +1993,14 @@ updateFilterBadges = function(){
   const label = activeCount ? ` (${activeCount})` : '';
   ['int','ft','pub'].forEach(s=>{ const el=document.getElementById(s+'-filter-count-badge'); if(el) el.textContent=label; });
 };
-function isRecentRelease(f){ if(f.status!=='RELEASED'||!f.endDate) return false; const today=new Date('2026-07-11'), cutoff=new Date(today); cutoff.setMonth(cutoff.getMonth()-1); const end=new Date(f.endDate); return end>=cutoff && end<=today; }
+function isRecentRelease(f){
+  if(f.status!=='RELEASED') return false;
+  const relevantDate = f.releaseDate || f.endDate;
+  if(!relevantDate) return false;
+  const today = new Date(); const cutoff = new Date(today); cutoff.setDate(cutoff.getDate()-30);
+  const d = new Date(relevantDate);
+  return d>=cutoff && d<=today;
+}
 getFilteredFeatures = function(scope){
   let list = getAllFeatures().filter(f=> finalFilters.search==='' || f.title.toLowerCase().includes(finalFilters.search));
   if(finalFilters.criteria.has('status') && finalFilters.values.status!=='all') list = list.filter(f=>f.status===finalFilters.values.status);
@@ -2239,11 +2235,6 @@ renderDashboard = function(){
   const labels = {month:'Month',quarter:'Quarter',year:'Year'};
   optionPanel('dash-period-panel', dashFilter.period, ['month','quarter','year'].map(v=>({value:v,label:labels[v]})), v=>`setDashPeriod('${v}')`);
   const label = document.getElementById('dash-period-label'); if(label) label.textContent = labels[dashFilter.period];
-  const recentPanel = document.getElementById('recent-releases-list')?.closest('.panel');
-  if(recentPanel && !recentPanel.querySelector('[data-recent-link]')){
-    recentPanel.querySelector('button')?.remove();
-    recentPanel.insertAdjacentHTML('beforeend', `<button data-recent-link class="btn btn-ghost btn-sm" style="width:100%; justify-content:center; margin-top:12px;" onclick="openRecentReleases()">View recent releases</button>`);
-  }
 };
 setDashPeriod = function(period){ dashFilter.period = period; closeAllDD(); renderDashboard(); };
 const originalSaveSettings = saveSettings;
