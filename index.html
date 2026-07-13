@@ -1183,13 +1183,12 @@ function renderGanttView(scope, publicOnly){
         const left = timeFraction(f.startDate, win) * totalWidth;
         const right = timeFraction(f.endDate, win) * totalWidth;
         const barWidth = Math.max(right - left, 34);
-        const label = `${f.title} · ${STATUS_LABELS[f.status]}${publicOnly ? '' : ' · ' + f.progress + '%'}`;
-        const flagLeft = Math.max(left - 18, 0);
+        const flagLeft = Math.min(left + barWidth + 8, totalWidth - 90);
         laneHtml += `<div class="lane-row" style="width:${totalWidth}px;">
-          <i data-lucide="flag" style="position:absolute; left:${flagLeft}px; top:${isSub?'17px':'16px'}; width:13px;height:13px; color:${STATUS_COLORS[f.status]}; z-index:2;"></i>
           <div class="bar" style="left:${left}px; width:${barWidth}px; background:${STATUS_COLORS[f.status]}; ${isSub?'opacity:.85; top:14px; height:24px;':''}"
           onclick='openDrawer(${JSON.stringify(f).replace(/'/g,"&apos;")})' onmouseenter='showTip(event, ${JSON.stringify(f).replace(/'/g,"&apos;")})' onmousemove='moveTip(event)' onmouseleave='hideTip()'>
-          <div class="fill" style="width:${f.progress}%;"></div><span>${label}</span></div></div>`;
+          <div class="fill" style="width:${f.progress}%;"></div><span style="overflow:hidden; text-overflow:ellipsis;">${f.title}</span></div>
+          <div class="bar-flag" style="left:${flagLeft}px; background:${STATUS_COLORS[f.status]}18; color:${STATUS_COLORS[f.status]};"><i data-lucide="flag" style="width:11px;height:11px;"></i>${STATUS_LABELS[f.status]}</div></div>`;
         rowCount++;
       });
     });
