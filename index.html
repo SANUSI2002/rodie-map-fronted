@@ -606,6 +606,24 @@
   </div>
 </section>
 
+<!-- ================= ACTIVITY & HEALTH ================= -->
+<section class="view" id="view-activity">
+  <div class="app">
+    <aside class="sidebar" id="sidebar-activity"></aside>
+    <div class="main"><div class="topbar" id="topbar-activity"></div>
+      <div class="content">
+        <div class="page-head"><div><h1>Activity & Health</h1><p>Who did what and when, plus a live check of the backend and database.</p></div></div>
+        <div class="seg" style="width:fit-content; margin-bottom:18px;">
+          <button id="activity-tab-log" onclick="setActivityTab('log')" class="active">Activity Log</button>
+          <button id="activity-tab-health" onclick="setActivityTab('health')">Site Health</button>
+        </div>
+        <div id="activity-tab-log-panel"></div>
+        <div id="activity-tab-health-panel" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ================= REPORTS ================= -->
 <section class="view" id="view-reports">
   <div class="app">
@@ -737,12 +755,12 @@ function toggleTheme(){
 /* ==================================================================
    NAVIGATION
 ================================================================== */
-const INTERNAL_VIEWS = ['dashboard','roadmap','features','products','modules','reports','users','settings'];
+const INTERNAL_VIEWS = ['dashboard','roadmap','features','products','modules','reports','users','settings','activity'];
 const SIDEBAR_LINKS = [
   { view:'dashboard', label:'Dashboard', icon:'layout-dashboard' }, { view:'roadmap', label:'Roadmap View', icon:'map' },
   { view:'products', label:'Products', icon:'package' }, { view:'features', label:'Features', icon:'list' },
 ];
-const SIDEBAR_ADMIN_LINKS = [ { view:'users', label:'User Management', icon:'users' }, { view:'settings', label:'Settings', icon:'settings' } ];
+const SIDEBAR_ADMIN_LINKS = [ { view:'users', label:'User Management', icon:'users' }, { view:'activity', label:'Activity & Health', icon:'activity' }, { view:'settings', label:'Settings', icon:'settings' } ];
 
 function go(view){
   if(INTERNAL_VIEWS.includes(view) && !session.loggedIn){ go('login'); return; }
@@ -755,6 +773,7 @@ function go(view){
   if(view==='features') renderBoard('ft');
   if(view==='products') renderInternalProducts();
   if(view==='modules') renderModulesPage();
+  if(view==='activity') renderActivityHealthPage();
   if(view==='reports') renderReports();
   if(view==='users') renderUsersTable();
   if(view==='public-roadmap') renderBoard('pub');
@@ -1896,10 +1915,10 @@ function roleLabel(role){ return role.replace(/_/g,' ').toLowerCase().replace(/\
 function isSuperAdmin(){ return session.role==='SUPER_ADMIN'; }
 function isViewer(){ return session.role==='VIEWER'; }
 function canEdit(){ return !isViewer(); }
-function canAccessView(view){ return !(view==='users' || view==='settings') || isSuperAdmin(); }
+function canAccessView(view){ return !(view==='users' || view==='settings' || view==='activity') || isSuperAdmin(); }
 
 renderSidebar = function(activeView){
-  ['dashboard','roadmap','features','products','modules','reports','users','settings'].forEach(v=>{
+  ['dashboard','roadmap','features','products','modules','reports','users','settings','activity'].forEach(v=>{
     const el = document.getElementById('sidebar-'+v); if(!el) return;
     const collapsed = collapsedSidebars.has(v);
     el.classList.toggle('collapsed', collapsed);
@@ -1926,7 +1945,7 @@ renderSidebar = function(activeView){
 function toggleSidebarCollapse(view){ collapsedSidebars.has(view) ? collapsedSidebars.delete(view) : collapsedSidebars.add(view); renderSidebar(view); }
 
 buildTopbars = function(){
-  ['dashboard','roadmap','features','products','modules','reports','users','settings'].forEach(v=>{
+  ['dashboard','roadmap','features','products','modules','reports','users','settings','activity'].forEach(v=>{
     const el = document.getElementById('topbar-'+v); if(!el) return;
     el.innerHTML = `
       <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
@@ -2253,6 +2272,75 @@ function renderModulesTable(){
   lucide.createIcons();
 }
 function renderModulesPage(){ renderModulesTable(); }
+
+/* ---- Activity Log & Site Health ---- */
+let activityTab = 'log';
+function setActivityTab(tab){
+  activityTab = tab;
+  document.getElementById('activity-tab-log').classList.toggle('active', tab==='log');
+  document.getElementById('activity-tab-health').classList.toggle('active', tab==='health');
+  document.getElementById('activity-tab-log-panel').style.display = tab==='log' ? 'block' : 'none';
+  document.getElementById('activity-tab-health-panel').style.display = tab==='health' ? 'block' : 'none';
+  if(tab==='log') renderActivityLogPanel(); else renderSiteHealthPanel();
+}
+function renderActivityHealthPage(){
+  setActivityTab(activityTab);
+}
+function timeAgo(dateStr){
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs/24);
+  if(days < 30) return days + 'd ago';
+  return fmtDate(dateStr);
+}
+async function renderActivityLogPanel(){
+  const panel = document.getElementById('activity-tab-log-panel');
+  panel.innerHTML = `<div class="panel"><div id="activity-log-list" style="font-size:13px;">Loading…</div></div>`;
+  try {
+    const entries = await apiFetch('/activity?limit=100');
+    const list = document.getElementById('activity-log-list');
+    if(!list) return;
+    list.innerHTML = entries.length ? entries.map(a=>{
+      const isLogin = a.entityType==='Session';
+      const icon = isLogin ? 'log-in' : (a.action==='deleted' ? 'trash-2' : a.action==='created' ? 'plus-circle' : 'pencil');
+      const verb = isLogin ? `logged in` : `${a.action} ${a.entityType.toLowerCase()} <b>${a.entityName}</b>`;
+      return `<div class="activity-row"><i data-lucide="${icon}" style="width:14px;height:14px;color:var(--ink-faint); flex-shrink:0;"></i><span><b>${a.actorName}</b> ${verb}${a.detail?` — ${a.detail}`:''}</span><span style="margin-left:auto; color:var(--ink-faint); font-size:12px; white-space:nowrap;">${timeAgo(a.createdAt)}</span></div>`;
+    }).join('') : `<div style="color:var(--ink-faint); padding:8px 0;">No activity yet.</div>`;
+    lucide.createIcons();
+  } catch(e){
+    const list = document.getElementById('activity-log-list');
+    if(list) list.innerHTML = `<div style="color:var(--ink-faint); padding:8px 0;">Could not load activity log.</div>`;
+  }
+}
+async function renderSiteHealthPanel(){
+  const panel = document.getElementById('activity-tab-health-panel');
+  panel.innerHTML = `<div class="panel">Checking…</div>`;
+  try {
+    const h = await apiFetch('/health');
+    const statusColor = h.status==='ok' ? '#22C55E' : '#EF4444';
+    const dbColor = h.database.connected ? '#22C55E' : '#EF4444';
+    const uptimeHrs = Math.floor(h.uptimeSeconds/3600);
+    const uptimeMins = Math.floor((h.uptimeSeconds%3600)/60);
+    panel.innerHTML = `
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px;">
+        <div class="panel"><div style="font-size:12px; color:var(--ink-faint); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Overall status</div><div style="display:flex; align-items:center; gap:8px;"><span style="width:10px;height:10px;border-radius:50%;background:${statusColor};"></span><span style="font-size:18px; font-weight:800; text-transform:capitalize;">${h.status}</span></div></div>
+        <div class="panel"><div style="font-size:12px; color:var(--ink-faint); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Database</div><div style="display:flex; align-items:center; gap:8px;"><span style="width:10px;height:10px;border-radius:50%;background:${dbColor};"></span><span style="font-size:18px; font-weight:800;">${h.database.connected ? 'Connected' : 'Down'}</span></div><div style="font-size:12px; color:var(--ink-faint); margin-top:4px;">${h.database.latencyMs}ms response</div></div>
+        <div class="panel"><div style="font-size:12px; color:var(--ink-faint); font-weight:700; text-transform:uppercase; margin-bottom:8px;">Server uptime</div><div style="font-size:18px; font-weight:800;">${uptimeHrs}h ${uptimeMins}m</div><div style="font-size:12px; color:var(--ink-faint); margin-top:4px;">since last restart</div></div>
+      </div>
+      <div class="panel">
+        <h3 style="margin-top:0;">Recent errors</h3>
+        <div style="font-size:13px;">${h.recentErrors.length ? h.recentErrors.map(e=>`<div class="activity-row"><i data-lucide="alert-triangle" style="width:14px;height:14px;color:#EF4444; flex-shrink:0;"></i><span><b>${e.status}</b> ${e.method||''} ${e.path||''} — ${e.message}</span><span style="margin-left:auto; color:var(--ink-faint); font-size:12px; white-space:nowrap;">${timeAgo(e.timestamp)}</span></div>`).join('') : `<div style="color:var(--ink-faint); padding:8px 0;">No recent errors — looking healthy.</div>`}</div>
+      </div>
+    `;
+    lucide.createIcons();
+  } catch(e){
+    panel.innerHTML = `<div class="panel" style="color:#EF4444;">Could not reach the backend to check health. This itself may indicate the server is down.</div>`;
+  }
+}
 moduleOptionsFor = function(productId){ return modules.filter(m=>m.productId===productId && m.active!==false).map(m=>`<option value="${m.id}">${m.name}</option>`).join(''); };
 function deleteFeature(id){
   if(!canEdit()){ showToast('Viewers cannot delete features'); return; }
