@@ -1933,7 +1933,7 @@ renderSidebar = function(activeView){
     main.forEach(i=>{ html += `<a class="side-link ${i.view===activeView?'active':''}" onclick="go('${i.view}')"><i data-lucide="${i.icon}"></i><span>${i.label}</span></a>`; });
     if(isSuperAdmin()){
       html += `<div class="side-sep"></div>`;
-      [{ view:'users', label:'User', icon:'users' }, { view:'settings', label:'Settings', icon:'settings' }].forEach(i=>{
+      [{ view:'users', label:'User', icon:'users' }, { view:'activity', label:'Activity & Health', icon:'activity' }, { view:'settings', label:'Settings', icon:'settings' }].forEach(i=>{
         html += `<a class="side-link ${i.view===activeView?'active':''}" onclick="go('${i.view}')"><i data-lucide="${i.icon}"></i><span>${i.label}</span></a>`;
       });
     }
