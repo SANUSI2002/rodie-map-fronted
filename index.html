@@ -306,7 +306,7 @@
   .filter-control-label{ display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:var(--ink-soft); }
   .filter-control-label button{ border:0; background:transparent; color:var(--ink-faint); font-size:16px; line-height:1; padding:0; cursor:pointer; }
   .filter-control select{ min-width:148px; border:1px solid var(--border); border-radius:10px; padding:9px 30px 9px 11px; background:var(--surface); color:var(--ink); font-size:13px; font-weight:500; }
-  .more-filter-btn{ border:2px solid color-mix(in srgb, var(--ink-faint) 38%, var(--border)); background:var(--surface); color:var(--blue); border-radius:12px; padding:9px 14px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:7px; box-shadow:0 1px 2px rgba(11,18,32,.08); }
+  .more-filter-btn{ border:0; background:var(--surface); color:var(--blue); border-radius:12px; padding:9px 14px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:7px; box-shadow:0 1px 2px rgba(11,18,32,.08); }
   .more-filter-btn .plus{ font-size:20px; font-weight:500; line-height:1; }
   .reset-filter-btn{ border:0; background:transparent; color:#ff2d2d; font-size:14px; font-weight:700; padding:9px 3px; }
   .filter-panel.more-filter-menu{ width:230px; padding:12px 10px; }
@@ -1428,7 +1428,7 @@ document.getElementById('modal-overlay').addEventListener('click', e=>{ if(e.tar
 
 function moduleOptionsFor(productId){ return modules.filter(m=>m.productId===productId).map(m=>`<option value="${m.id}">${m.name}</option>`).join(''); }
 function parentFeatureOptions(productId, moduleId, currentParentId, editId){
-  const list = features.filter(f=>!f.parentId && f.id!==editId && (!productId || f.productId===productId) && (!moduleId || f.moduleId===moduleId));
+  const list = features.filter(f=>!f.parentId && f.id!==editId && f.status!=='CANCELLED' && (!productId || f.productId===productId) && (!moduleId || f.moduleId===moduleId));
   return `<option value="">No parent — create top-level feature</option>` + list.map(f=>`<option value="${f.id}" ${currentParentId===f.id?'selected':''}>${productById(f.productId)?.name || 'Product'} / ${moduleById(f.moduleId)?.name || 'No module'} — ${f.title}</option>`).join('');
 }
 function syncParentFeatureOptions(){
@@ -1902,7 +1902,7 @@ users = [
   { name:'Bisi Tade', email:'bisi@wragby.com', role:'PRODUCT_MANAGER', active:true },
   { name:'Sales Team', email:'sales@wragby.com', role:'VIEWER', active:false },
 ];
-let finalFilters = { search:'', criteria:new Set(['date']), values:{ date:{from:'',to:''}, status:'all', priority:'all', visibility:'all' }, recentOnly:false };
+let finalFilters = { search:'', criteria:new Set(), values:{ date:{from:'',to:''}, status:'all', priority:'all', visibility:'all' }, recentOnly:false };
 const FINAL_FILTER_CRITERIA = [
   { key:'date', label:'Date' }, { key:'priority', label:'Priority' }, { key:'status', label:'Status' }, { key:'visibility', label:'Visibility' }
 ];
@@ -2031,14 +2031,13 @@ renderFilterPanel = function(panelId){
   }
   panel.className = 'filter-strip';
   panel.classList.add('open');
-  if(!finalFilters.criteria.size) finalFilters.criteria.add('date');
   const active = [...finalFilters.criteria];
   const moreId = `${scope}-more-filter-panel`;
   const remaining = FINAL_FILTER_CRITERIA.filter(c=>!finalFilters.criteria.has(c.key));
   panel.innerHTML = active.map(k=>activeFilterControl(scope,k)).join('') +
     `<div class="dd"><button class="more-filter-btn" onclick="toggleDD('${moreId}')"><span class="plus">+</span> More Filters</button><div class="dd-panel left filter-panel more-filter-menu" id="${moreId}">
       ${remaining.length ? remaining.map(c=>`<div class="filter-criterion"><button onclick="addFilterCriterion('${c.key}','${scope}')">+</button><span>${c.label}</span></div>`).join('') : `<div style="font-size:13px;color:var(--ink-faint);padding:8px 10px;">All filters are shown</div>`}
-    </div></div><button class="reset-filter-btn" onclick="clearFilters('${panelId}')">Reset to Default</button>`;
+    </div></div><button class="reset-filter-btn" onclick="clearFilters('${panelId}')">Default</button>`;
 };
 function filterValuesFor(key){
   if(key==='status') return [{value:'all',label:'Any status'}, ...Object.keys(STATUS_LABELS).map(s=>({value:s,label:STATUS_LABELS[s]}))];
@@ -2052,9 +2051,9 @@ function activeFilterControl(scope, key){
   const meta = FINAL_FILTER_CRITERIA.find(c=>c.key===key);
   if(key==='date'){
     const range = (finalFilters.values.date && typeof finalFilters.values.date==='object') ? finalFilters.values.date : {from:'',to:''};
-    return `<label class="filter-control"><span class="filter-control-label">${meta.label}</span><div style="display:flex; gap:6px; align-items:center;"><input type="date" value="${range.from||''}" onchange="setDateRangeFilter('from', this.value)" style="width:132px;"><span style="color:var(--ink-faint); font-size:12px;">to</span><input type="date" value="${range.to||''}" onchange="setDateRangeFilter('to', this.value)" style="width:132px;"></div></label>`;
+    return `<label class="filter-control"><span class="filter-control-label">${meta.label}: <button type="button" onclick="removeFilterCriterion('date','${scope}')" title="Remove ${meta.label}">×</button></span><div style="display:flex; gap:6px; align-items:center;"><input type="date" value="${range.from||''}" onchange="setDateRangeFilter('from', this.value)" style="width:132px;"><span style="color:var(--ink-faint); font-size:12px;">to</span><input type="date" value="${range.to||''}" onchange="setDateRangeFilter('to', this.value)" style="width:132px;"></div></label>`;
   }
-  const remove = key==='date' ? '' : `<button type="button" onclick="removeFilterCriterion('${key}','${scope}')" title="Remove ${meta.label}">×</button>`;
+  const remove = `<button type="button" onclick="removeFilterCriterion('${key}','${scope}')" title="Remove ${meta.label}">×</button>`;
   return `<label class="filter-control"><span class="filter-control-label">${meta.label}: ${remove}</span><select onchange="setFilterValue('${key}', this.value, '${scope}')">${filterValuesFor(key).map(v=>`<option value="${v.value}" ${String(finalFilters.values[key])===String(v.value)?'selected':''}>${v.label}</option>`).join('')}</select></label>`;
 }
 function setDateRangeFilter(part, value){
@@ -2064,9 +2063,14 @@ function setDateRangeFilter(part, value){
 }
 function activeFilterChip(scope, key){ return activeFilterControl(scope, key); }
 function addFilterCriterion(key, scope){ finalFilters.criteria.add(key); closeAllDD(); renderBoard(scope); }
-function removeFilterCriterion(key, scope){ if(key!=='date') finalFilters.criteria.delete(key); finalFilters.values[key]='all'; closeAllDD(); renderBoard(scope); }
+function removeFilterCriterion(key, scope){
+  finalFilters.criteria.delete(key);
+  finalFilters.values[key] = key==='date' ? {from:'',to:''} : 'all';
+  closeAllDD();
+  renderBoard(scope);
+}
 function setFilterValue(key, value, scope){ finalFilters.values[key]=value; renderBoard('int'); renderBoard('ft'); renderBoard('pub'); }
-clearFilters = function(panelId){ finalFilters.criteria=new Set(['date']); finalFilters.values={date:{from:'',to:''},status:'all',priority:'all',visibility:'all'}; finalFilters.recentOnly=false; renderBoard('int'); renderBoard('ft'); renderBoard('pub'); showToast('Filters reset'); };
+clearFilters = function(panelId){ finalFilters.criteria=new Set(); finalFilters.values={date:{from:'',to:''},status:'all',priority:'all',visibility:'all'}; finalFilters.recentOnly=false; renderBoard('int'); renderBoard('ft'); renderBoard('pub'); showToast('Filters reset to default'); };
 updateFilterBadges = function(){
   const activeCount = [...finalFilters.criteria].filter(k=>{
     if(k==='date'){ const r = finalFilters.values.date||{}; return !!(r.from || r.to); }
@@ -2150,7 +2154,7 @@ listCell = function(f, key, product, module, scope, publicOnly){
   if(key==='product'){
     if(!product) return '?';
     const target = f._depth>0 && f.parentId ? featureById(f.parentId) : f;
-    const add = (!publicOnly && canEdit() && target) ? `<span class="add-sub-btn" onclick='event.stopPropagation(); openFeatureModal(${JSON.stringify({parentId:target.id, productId:target.productId, moduleId:target.moduleId}).replace(/'/g,"&apos;")})' title="Add sub-feature">+</span>` : '';
+    const add = (!publicOnly && canEdit() && target && target.status!=='CANCELLED') ? `<span class="add-sub-btn" onclick='event.stopPropagation(); openFeatureModal(${JSON.stringify({parentId:target.id, productId:target.productId, moduleId:target.moduleId}).replace(/'/g,"&apos;")})' title="Add sub-feature">+</span>` : '';
     return `<div class="product-cell-with-add">${add}<span>${product.name}</span></div>`;
   }
   if(key==='module'){
